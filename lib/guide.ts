@@ -77,6 +77,7 @@ export const guide: Record<"id" | "en", Guide> = {
       "Obrolan biasa diabaikan. Anda aman berdiskusi tanpa diagram ikut berubah.",
       "Kata sopan seperti “tolong” atau “coba” boleh saja, tidak mengganggu.",
       "Bila mikrofon sedang tidak bisa dipakai, ketik saja perintahnya di kolom kanan bawah.",
+      "Simpan hasilnya lewat Desain tersimpan agar bisa dibuka lagi nanti di browser yang sama.",
     ],
     troubleTitle: "Kalau belum berhasil",
     problemLabel: "Keluhan",
@@ -87,6 +88,7 @@ export const guide: Record<"id" | "en", Guide> = {
       { problem: "Nama kotaknya jadi kepanjangan", fix: "Sebut nama yang pendek. Nama lebih dari lima kata sengaja ditolak agar obrolan tidak ikut tergambar." },
       { problem: "Kotaknya dobel dengan nama mirip", fix: "Nama dicocokkan persis, tetapi huruf besar-kecil diabaikan. Ucapkan “ganti” untuk menyeragamkan namanya." },
       { problem: "Salah ucap dan terlanjur tergambar", fix: "Ucapkan “batalkan”. Kalau ingin mengulanginya lagi, ucapkan “ulangi”." },
+      { problem: "Kalimatnya sudah benar tapi garisnya tidak muncul", fix: "Buka Editor manual di bar bawah. Di sana kotak, garis, dan garis putus-putus bisa dibuat sendiri tanpa menebak kalimat." },
     ],
   },
   en: {
@@ -143,6 +145,7 @@ export const guide: Record<"id" | "en", Guide> = {
       "Ordinary conversation is ignored, so you can discuss freely without the diagram changing.",
       "Polite words like “please” are fine and get stripped automatically.",
       "If the microphone is unavailable, just type the command in the box at the bottom right.",
+      "Save your work under Saved designs so you can open it again later in the same browser.",
     ],
     troubleTitle: "If it is not working",
     problemLabel: "Problem",
@@ -153,6 +156,7 @@ export const guide: Record<"id" | "en", Guide> = {
       { problem: "The box name came out too long", fix: "Use a short name. Names longer than five words are rejected on purpose so conversation is not drawn." },
       { problem: "Duplicate boxes with similar names", fix: "Names match exactly, though upper and lower case are ignored. Say “rename” to make them consistent." },
       { problem: "You misspoke and it was drawn", fix: "Say “undo”. To put it back again, say “redo”." },
+      { problem: "The sentence was right but no line appeared", fix: "Open the Manual editor in the bottom bar. Boxes, lines and dashed lines can all be drawn there by hand." },
     ],
   },
 };

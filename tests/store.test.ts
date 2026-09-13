@@ -184,3 +184,62 @@ test("rename normalises the typed label and refuses a duplicate", () => {
   s().undo();
   assert.deepEqual(labels(), ["Next.js", "User"]);
 });
+
+// The manual editor is the deterministic path into the same diagram: it names a box
+// and draws a line outright instead of hoping the parser recognises a sentence.
+test("addNode creates a box, normalises its label and refuses a duplicate", () => {
+  reset();
+  assert.equal(s().addNode("next js"), true);
+  assert.deepEqual(labels(), ["Next.js", "User"]);
+  // The label is what makes a node findable, so a second box may not reuse one.
+  assert.equal(s().addNode("NEXT JS"), false);
+  assert.equal(s().addNode("   "), false);
+  assert.equal(s().nodes.length, 2);
+  s().undo();
+  assert.deepEqual(labels(), ["User"]);
+});
+
+test("addNode keeps the kind picked in the editor over the one the vocabulary infers", () => {
+  reset();
+  assert.equal(s().addNode("Cache Miss", "technique"), true);
+  assert.equal(s().nodes.find(n => String(n.data.label) === "Cache Miss")!.data.kind, "technique");
+  // Without a choice the vocabulary still decides: "Redis" is a data store.
+  assert.equal(s().addNode("Redis"), true);
+  assert.equal(s().nodes.find(n => String(n.data.label) === "Redis")!.data.kind, "data");
+});
+
+test("link connects two existing boxes and records the line style", () => {
+  reset();
+  s().addNode("Cache Miss");
+  const [user, miss] = s().nodes;
+  assert.equal(s().link(user.id, miss.id, "dashed"), true);
+  assert.equal(s().edges.length, 1);
+  assert.equal(s().edges[0].data!.variant, "dashed");
+  s().undo();
+  assert.equal(s().edges.length, 0);
+});
+
+test("link refuses a self-loop, a duplicate and an id the canvas does not hold", () => {
+  reset();
+  s().addNode("Cache Miss");
+  const [user, miss] = s().nodes;
+  assert.equal(s().link(user.id, user.id, "solid"), false);
+  assert.equal(s().link(user.id, "no-such-node", "solid"), false);
+  assert.equal(s().link(user.id, miss.id, "solid"), true);
+  assert.equal(s().link(user.id, miss.id, "dashed"), false);
+  assert.equal(s().edges.length, 1);
+});
+
+test("setEdgeVariant flips a line between solid and dashed, and is undoable", () => {
+  reset();
+  s().execute(parseIntent("User terhubung ke CDN"));
+  const edge = s().edges[0];
+  // A parsed edge stores no style; the canvas infers one from its direction.
+  assert.equal(edge.data?.variant, undefined);
+  assert.equal(s().setEdgeVariant(edge.id, "dashed"), true);
+  assert.equal(s().edges[0].data!.variant, "dashed");
+  assert.equal(s().setEdgeVariant(edge.id, "dashed"), false);
+  assert.equal(s().setEdgeVariant("no-such-edge", "solid"), false);
+  s().undo();
+  assert.equal(s().edges[0].data?.variant, undefined);
+});

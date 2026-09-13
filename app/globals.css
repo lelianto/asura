@@ -7,6 +7,7 @@
   --primary:#b7f774; --primary-foreground:#102009; --secondary:#16231f; --secondary-foreground:#dce9e2;
   --muted:#14201d; --muted-foreground:#8fa49b; --accent:#b7f774; --accent-foreground:#102009;
   --destructive:#ff796f; --border:#273730; --input:#273730; --ring:#b7f774; --radius:.9rem;
+  --popover:#0d1916; --popover-foreground:#edf6f1;
 }
 @theme inline {
   --color-background:var(--background); --color-foreground:var(--foreground); --color-card:var(--card);
@@ -14,6 +15,7 @@
   --color-secondary:var(--secondary); --color-secondary-foreground:var(--secondary-foreground); --color-muted:var(--muted);
   --color-muted-foreground:var(--muted-foreground); --color-accent:var(--accent); --color-accent-foreground:var(--accent-foreground);
   --color-destructive:var(--destructive); --color-border:var(--border); --color-input:var(--input); --color-ring:var(--ring);
+  --color-popover:var(--popover); --color-popover-foreground:var(--popover-foreground);
   --font-sans:"Avenir Next",Avenir,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--background);color:var(--foreground)}

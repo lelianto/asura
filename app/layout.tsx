@@ -3,7 +3,7 @@ import "@xyflow/react/dist/style.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Arsitektur Suara — Diagram sistem lewat suara",
+  title: "asuradraw — Diagram sistem lewat suara",
   description: "Ucapkan keputusan arsitektur Anda. Sistem hanya menggambarkannya.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };

@@ -1,4 +1,4 @@
-# Arsitektur Suara — Referensi Perintah Suara
+# asuradraw — Referensi Perintah Suara
 
 **Versi parser** `1.0` · **Bahasa** Bahasa Indonesia, English · **Status** stabil
 
@@ -316,7 +316,7 @@ Harus berdiri sendiri sebagai satu ucapan penuh.
 
 ## Referensi Kosakata
 
-161 entri, 556 bentuk ucapan. Setiap bentuk diverifikasi oleh sapuan uji otomatis
+163 entri, 649 bentuk ucapan. Setiap bentuk diverifikasi oleh sapuan uji otomatis
 (`tests/vocabulary.test.ts`) yang mengenumerasi seluruh string yang dapat dicocokkan
 tiap pola, lalu memastikan hasil normalisasinya sama dengan label kanonik.
 
@@ -353,6 +353,7 @@ membuat node `Legacy Billing` dengan kind `service`.
 | Label kanonik | Bentuk ucapan yang dikenali |
 |---|---|
 | `Frontend` | `frontend application` · `frontend app` · `aplikasi frontend` · `frontend` · `front end` |
+| `Next.js Server` | `nextjs server` · `nextj s server` · `nextgs server` · `nextg s server` · `nextjees server` · `nextje es server` · `nextjies server` · `nextji es server` · `nextjes server` · `nextges server` · `next js server` · `next j s server` · `next gs server` · `next g s server` · `next jees server` · `next je es server` · `next jies server` · `next ji es server` · `next jes server` · `next ges server` · `next.js server` · `next.j s server` · `next.gs server` · `next.g s server` · `next.jees server` · `next.je es server` · `next.jies server` · `next.ji es server` · `next.jes server` · `next.ges server` · `next. js server` · `next. j s server` · `next. gs server` · `next. g s server` · `next. jees server` · `next. je es server` · `next. jies server` · `next. ji es server` · `next. jes server` · `next. ges server` · `next .js server` · `next .j s server` · `next .gs server` · `next .g s server` · `next .jees server` · `next .je es server` · `next .jies server` · `next .ji es server` · `next .jes server` · `next .ges server` · `next . js server` · `next . j s server` · `next . gs server` · `next . g s server` · `next . jees server` · `next . je es server` · `next . jies server` · `next . ji es server` · `next . jes server` · `next . ges server` · `server nextjs` · `server nextj s` · `server nextgs` · `server nextg s` · `server next js` · `server next j s` · `server next gs` · `server next g s` · `server next.js` · `server next.j s` · `server next.gs` · `server next.g s` · `server next. js` · `server next. j s` · `server next. gs` · `server next. g s` · `server next .js` · `server next .j s` · `server next .gs` · `server next .g s` · `server next . js` · `server next . j s` · `server next . gs` · `server next . g s` |
 | `Next.js` | `nextjs` · `nextj s` · `nextgs` · `nextg s` · `nextjees` · `nextje es` · `nextjies` · `nextji es` · `nextjes` · `nextges` · `next js` · `next j s` · `next gs` · `next g s` · `next jees` · `next je es` · `next jies` · `next ji es` · `next jes` · `next ges` · `next.js` · `next.j s` · `next.gs` · `next.g s` · `next.jees` · `next.je es` · `next.jies` · `next.ji es` · `next.jes` · `next.ges` · `next. js` · `next. j s` · `next. gs` · `next. g s` · `next. jees` · `next. je es` · `next. jies` · `next. ji es` · `next. jes` · `next. ges` · `next .js` · `next .j s` · `next .gs` · `next .g s` · `next .jees` · `next .je es` · `next .jies` · `next .ji es` · `next .jes` · `next .ges` · `next . js` · `next . j s` · `next . gs` · `next . g s` · `next . jees` · `next . je es` · `next . jies` · `next . ji es` · `next . jes` · `next . ges` |
 | `TanStack Query` | `tanstack query` · `tan stack query` · `react query` · `tanstack` |
 | `Service Worker` | `service worker` |
@@ -475,6 +476,7 @@ membuat node `Legacy Billing` dengan kind `service`.
 | `Throttle` | `throttle` · `trotel` |
 | `Skeleton` | `skeleton` · `kerangka muat` |
 | `Font Optimization` | `font optimization` · `optimasi font` |
+| `React Hydration` | `react hydration` · `hydration react` |
 | `Minimal Hydration` | `minimal hydration` · `kurangi hydration` · `hydration` |
 | `Cache API` | `cache api` |
 | `IndexedDB` | `indexeddb` · `indexed db` · `indeksdb` · `indeks db` |

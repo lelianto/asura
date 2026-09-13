@@ -7,6 +7,7 @@ import { parseIntent, normalize, kindOf, VOCABULARY } from "../lib/diagram.ts";
 import { useDiagramStore } from "../lib/store.ts";
 import {
   BUCKETS, MENTAL_MODEL, PAIRS, CHEATSHEET, MEMORISE, WORKED_EXAMPLE, rowToStatement,
+  PIPELINE, PIPELINE_SHORT, WEB_VITALS, pipelineToStatements,
 } from "../lib/system-design.ts";
 
 const reset = () => useDiagramStore.setState({ nodes: [], edges: [], past: [], future: [] });
@@ -248,4 +249,52 @@ test("the whole study map fits inside the history limit", () => {
   for (const row of CHEATSHEET) state().execute(parseIntent(rowToStatement(row)));
   assert.ok(state().past.length <= 100, "drawing the sheet overflows the undo stack");
   assert.ok(state().past.length >= CHEATSHEET.length - 1, "rows are collapsing into one undo step");
+});
+
+// --- the Next.js request pipeline ------------------------------------------------
+// The pipeline is only worth putting on the cheatsheet if the canvas can draw it, so
+// it gets the same drawability guarantees as every cheatsheet row.
+
+test("every pipeline stage is a stable canvas label", () => {
+  for (const stage of PIPELINE)
+    assert.equal(normalize(stage.node), stage.node,
+      `"${stage.node}" is rewritten by the vocabulary, so the pipeline would draw a different node`);
+});
+
+test("every pipeline stage can be dictated as a node", () => {
+  for (const stage of PIPELINE)
+    assert.deepEqual(parseIntent(`tambahkan ${stage.node}`), [{ type: "ADD_NODE", label: stage.node }]);
+});
+
+test("the pipeline draws as one unbroken chain in the stated order", () => {
+  reset();
+  for (const statement of pipelineToStatements()) state().execute(parseIntent(statement));
+  assert.deepEqual(labels(), PIPELINE.map(s => s.node));
+  assert.equal(state().edges.length, PIPELINE.length - 1);
+  assert.deepEqual(edgesByLabel(),
+    PIPELINE.slice(1).map((stage, i) => `${PIPELINE[i].node}->${stage.node}`));
+});
+
+test("each hop is one connect, so a broken hop cannot hide inside a longer chain", () => {
+  for (const statement of pipelineToStatements()) {
+    const commands = parseIntent(statement);
+    assert.equal(commands.length, 1, `"${statement}" parsed into ${commands.length} commands`);
+    assert.equal(commands[0].type, "CONNECT");
+  }
+});
+
+test("each web vital is drawable and points at a stage the pipeline actually has", () => {
+  const stages = new Set(PIPELINE.map(s => s.node));
+  for (const vital of WEB_VITALS) {
+    assert.equal(normalize(vital.node), vital.node);
+    assert.equal(kindOf(vital.node), "requirement", `"${vital.node}" would not be drawn as a requirement`);
+    assert.ok(stages.has(vital.at), `"${vital.node}" points at "${vital.at}", which is not a pipeline stage`);
+  }
+});
+
+// The short form is a memory aid, not a second source of truth: it must not drift into
+// naming stages the full pipeline does not have.
+test("the short pipeline stays shorter than the full one and keeps its order", () => {
+  assert.ok(PIPELINE_SHORT.length < PIPELINE.length);
+  assert.deepEqual(PIPELINE_SHORT[0], PIPELINE[0].node);
 });

@@ -142,6 +142,13 @@ function expand(src: string): string[] {
   let i = 0;
   const parseAtom = (): string[] => {
     const c = src[i];
+    // A lookaround guards where an alternative may match; it is never itself spoken,
+    // so it contributes nothing to the sweep. Without this, `(?<!react )hydration`
+    // would be read as a spoken form called "?<!react hydration".
+    if (c === "(" && /^\(\?<?[!=]/.test(src.slice(i))) {
+      i += src[i + 2] === "<" ? 4 : 3;
+      parseAlt(); i++; return [""];
+    }
     if (c === "(") { i++; if (src.slice(i, i + 2) === "?:") i += 2; const inner = parseAlt(); i++; return inner; }
     if (c === "[") { const end = src.indexOf("]", i); const set = src.slice(i + 1, end).split(""); i = end + 1; return set; }
     if (c === "\\") { const n = src[i + 1]; i += 2; return n === "s" ? [" "] : [n]; }

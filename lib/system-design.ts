@@ -220,6 +220,76 @@ export const WORKED_EXAMPLE = {
   },
 };
 
+// The request-to-interactive path for a Next.js app. The buckets above answer "what do
+// I optimise"; this answers "where in the flow does it happen", which is the question an
+// interviewer is really asking when they say "walk me through what happens on load".
+// Every `node` is a label the canvas can draw, so the whole chain is one diagram.
+export type Stage = { node: string; id: string; en: string; notes: { id: string; en: string } };
+
+export const PIPELINE: Stage[] = [
+  { node: "URL", id: "URL", en: "URL",
+    notes: { id: "URL sederhana, redirect seminimal mungkin", en: "Simple URLs, as few redirects as possible" } },
+  { node: "DNS", id: "DNS", en: "DNS",
+    notes: { id: "DNS caching, CDN atau Anycast DNS", en: "DNS caching, CDN or Anycast DNS" } },
+  // Drawn as the handshake, not as "HTTPS": a bare protocol word is deliberately
+  // dropped from a chain by the parser, so it could never become a box.
+  { node: "TLS Handshake", id: "HTTPS / TLS", en: "HTTPS / TLS",
+    notes: { id: "TLS 1.3, connection reuse, security header", en: "TLS 1.3, connection reuse, security headers" } },
+  { node: "CDN", id: "CDN / Edge", en: "CDN / Edge",
+    notes: { id: "Cache, kompresi, optimasi gambar, distribusi geografis", en: "Cache, compression, image optimization, geographic distribution" } },
+  { node: "Next.js Server", id: "Next.js Server", en: "Next.js Server",
+    notes: { id: "SSG/ISR/SSR, caching, streaming, parallel data fetching, hindari waterfall", en: "SSG/ISR/SSR, caching, streaming, parallel data fetching, avoid waterfalls" } },
+  { node: "BFF", id: "API / BFF", en: "API / BFF",
+    notes: { id: "Cache, agregasi request, timeout", en: "Cache, request aggregation, timeout" } },
+  { node: "HTML", id: "Next.js menghasilkan HTML", en: "Next.js produces HTML",
+    notes: { id: "Server Components, streaming, kurangi JS yang dikirim ke client", en: "Server Components, streaming, less client-side JS" } },
+  { node: "Browser", id: "HTML/CSS/JS dikirim ke browser", en: "HTML/CSS/JS reaches the browser",
+    notes: { id: "Brotli atau Gzip, minifikasi, preload resource penting, code splitting", en: "Brotli or Gzip, minification, preload key resources, code splitting" } },
+  { node: "DOM", id: "HTML menjadi DOM", en: "HTML becomes the DOM",
+    notes: { id: "Kurangi ukuran DOM, pakai HTML semantik", en: "Smaller DOM, semantic HTML" } },
+  { node: "CSSOM", id: "CSS menjadi CSSOM", en: "CSS becomes the CSSOM",
+    notes: { id: "Critical CSS, kurangi CSS tak terpakai, hindari CSS blocking berlebihan", en: "Critical CSS, drop unused CSS, avoid excessive blocking CSS" } },
+  { node: "Render Tree", id: "DOM + CSSOM menjadi Render Tree", en: "DOM + CSSOM become the render tree",
+    notes: { id: "Kurangi kompleksitas DOM dan CSS", en: "Reduce DOM and CSS complexity" } },
+  { node: "Layout", id: "Layout", en: "Layout",
+    notes: { id: "Pesan dimensi gambar, hindari layout thrashing, jaga CLS", en: "Reserve image dimensions, avoid layout thrashing, protect CLS" } },
+  { node: "Paint", id: "Paint", en: "Paint",
+    notes: { id: "Kurangi efek CSS mahal dan repaint", en: "Fewer expensive CSS effects and repaints" } },
+  { node: "Composite", id: "Composite", en: "Composite",
+    notes: { id: "Animasi lewat transform dan opacity, hindari layer berlebihan", en: "Animate with transform and opacity, avoid excess layers" } },
+  { node: "Screen", id: "Layar / halaman pertama", en: "Screen / initial page",
+    notes: { id: "Optimasi LCP dan CLS", en: "Optimise LCP and CLS" } },
+  { node: "JavaScript Execution", id: "Eksekusi JavaScript", en: "JavaScript execution",
+    notes: { id: "Code splitting, lazy loading, tree shaking, kurangi long task", en: "Code splitting, lazy loading, tree shaking, fewer long tasks" } },
+  { node: "React Hydration", id: "React Hydration", en: "React hydration",
+    notes: { id: "Kurangi Client Component, selective atau streaming hydration, hindari hydration mismatch", en: "Fewer Client Components, selective or streaming hydration, no hydration mismatch" } },
+  { node: "Interactive Page", id: "Halaman interaktif", en: "Interactive page",
+    notes: { id: "Optimasi INP, debounce atau throttle, hindari re-render tak perlu", en: "Optimise INP, debounce or throttle, avoid needless re-renders" } },
+  { node: "Client Data Fetching", id: "Client-side data fetching", en: "Client-side data fetching",
+    notes: { id: "Cache, deduplikasi, revalidasi, paginasi", en: "Cache, deduplication, revalidation, pagination" } },
+  { node: "Update UI", id: "Update UI", en: "Update UI",
+    notes: { id: "Optimistic update, virtualisasi, memoisasi bila perlu", en: "Optimistic update, virtualization, memoization where it pays" } },
+];
+
+// The same chain compressed to what fits in your head under interview pressure.
+export const PIPELINE_SHORT = [
+  "URL", "DNS", "HTTPS", "CDN", "Next.js", "API", "HTML/CSS/JS", "DOM + CSSOM",
+  "Render Tree", "Layout", "Paint", "Composite", "Screen", "JS", "Hydration", "Interactive",
+];
+
+// Three points on that chain worth naming out loud, because every performance
+// question eventually lands on one of them.
+export const WEB_VITALS: { node: string; at: string; id: string; en: string }[] = [
+  { node: "LCP", at: "Screen",           id: "Seberapa cepat konten utama terlihat.", en: "How fast the main content becomes visible." },
+  { node: "CLS", at: "Layout",           id: "Seberapa stabil layout ketika halaman tampil.", en: "How stable the layout is as the page appears." },
+  { node: "INP", at: "Interactive Page", id: "Seberapa cepat halaman merespons interaksi.", en: "How fast the page responds to an interaction." },
+];
+
+// One statement per hop rather than a single long chain: a hop that ever stopped
+// parsing should fail on its own line, not take the whole pipeline down with it.
+export const pipelineToStatements = () =>
+  PIPELINE.slice(1).map((stage, i) => `${PIPELINE[i].node} terhubung ke ${stage.node}`);
+
 // Turning a cheatsheet row into something the canvas can draw.
 export const rowToStatement = (row: Row) =>
   `${row.node} bercabang ke ${row.techniques.join(" dan ")}`;

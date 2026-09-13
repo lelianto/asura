@@ -40,6 +40,7 @@ const vocabulary: Entry[] = [
   // application layer
   // id-ID hears the spelled-out "je es"/"ji es" as "GS" or "jes"; accept them all.
   {pattern:/\b(frontend application|frontend app|aplikasi frontend|front ?end)\b/gi,label:"Frontend",kind:"app"},
+  {pattern:/\b(next ?\.? ?(?:j ?s|g ?s|j[ei] ?es|[jg]es) server|server next ?\.? ?(?:j ?s|g ?s))\b/gi,label:"Next.js Server",kind:"app"},
   {pattern:/\b(next ?\.? ?(?:j ?s|g ?s|j[ei] ?es|[jg]es))\b/gi,label:"Next.js",kind:"app"},
   {pattern:/\b(tan ?stack query|react query|tanstack)\b/gi,label:"TanStack Query",kind:"app"},
   {pattern:/\b(service worker)\b/gi,label:"Service Worker",kind:"app"},
@@ -145,7 +146,8 @@ const vocabulary: Entry[] = [
   {pattern:/\b(throttle|trotel)\b/gi,label:"Throttle",kind:"technique"},
   {pattern:/\b(skeleton|kerangka muat)\b/gi,label:"Skeleton",kind:"technique"},
   {pattern:/\b(font optimization|optimasi font)\b/gi,label:"Font Optimization",kind:"technique"},
-  {pattern:/\b(minimal hydration|kurangi hydration|hydration)\b/gi,label:"Minimal Hydration",kind:"technique"},
+  {pattern:/\b(react hydration|hydration react)\b/gi,label:"React Hydration",kind:"technique"},
+  {pattern:/\b(minimal hydration|kurangi hydration|(?<!react )hydration)\b/gi,label:"Minimal Hydration",kind:"technique"},
   {pattern:/\b(cache api)\b/gi,label:"Cache API",kind:"technique"},
   {pattern:/\b(indexed ?db|indeks ?db)\b/gi,label:"IndexedDB",kind:"technique"},
   {pattern:/\b(browser cache|cache browser)\b/gi,label:"Browser Cache",kind:"technique"},
@@ -280,7 +282,10 @@ function clean(raw:string){
   if(text.includes(","))text=text.split(",")[0].trim();
   if(FRAGMENT.test(text))return"";
   // Unknown terms keep the casing they were spoken with; canonical ones are left alone.
-  if(!kinds.has(text.toLowerCase()))text=text.replace(/\b[a-z]/g,c=>c.toUpperCase());
+  // A stop is not a word boundary worth capitalising across: "Next.js Server" is one
+  // name that happens to contain a dot, and title-casing it produced "Next.Js Server",
+  // a second node standing next to the real one.
+  if(!kinds.has(text.toLowerCase()))text=text.replace(/(?<![\w.])[a-z]/g,c=>c.toUpperCase());
   // Keep the half the vocabulary recognises, so the alias lands on the existing node.
   if(ALIAS.test(text)&&!kinds.has(text.toLowerCase())){
     const halves=text.split(ALIAS).map(x=>x.trim()).filter(Boolean);

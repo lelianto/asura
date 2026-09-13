@@ -2,15 +2,23 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {ArrowLeft,ArrowRight,ArrowUp,Languages,PenLine,Sparkles,Target} from "lucide-react";
+import {ArrowLeft,ArrowRight,ArrowUp,Gauge,Languages,PenLine,Route,Sparkles,Target} from "lucide-react";
 import {parseIntent} from "@/lib/diagram";
 import {useDiagramStore} from "@/lib/store";
-import {BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,WORKED_EXAMPLE,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
+import {BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,PIPELINE,PIPELINE_SHORT,WEB_VITALS,WORKED_EXAMPLE,pipelineToStatements,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select";
 
 const T={
   id:{back:"Kembali ke kanvas",title:"Cheatsheet FE System Design",
     tagline:"Jangan hafalkan teknologi. Hafalkan kerangka berpikir dan hubungan problem → solusi.",
-    jump:"Lompat ke bucket",top:"Kembali ke atas",
+    jump:"Lompat ke bagian",top:"Kembali ke atas",
+    pipelineChip:"Alur Next.js",
+    pipeline:"Alur Next.js: dari URL sampai interaktif",
+    pipelineLede:"Pertanyaan \u201ccoba ceritakan apa yang terjadi saat halaman dibuka\u201d menanyakan urutan ini. Setiap tahap punya satu hal yang bisa dioptimasi \u2014 itu yang membuat jawabannya terdengar terstruktur, bukan hafalan tool.",
+    pipelineShort:"Hafalan super singkat",
+    pipelineNodeHint:"Nama kotak di kanvas",
+    vitals:"Tiga titik performance",
+    vitalsLede:"Hampir semua pertanyaan performance berujung ke salah satu dari tiga ini. Kaitkan ke tahap tempat masalahnya muncul.",
     flow:"Kerangka berpikir",flowLede:"Lima langkah ini urut. Trade-off selalu jadi penutup — bagian inilah yang paling menunjukkan seniority.",
     buckets:"Delapan bucket",bucketsLede:"Daripada menghafal 30 baris, ingat delapan kata ini beserta polanya: Requirement → Problem → Technique → Trade-off. Ketuk salah satu untuk melompat ke bagiannya.",
     memo:"Perlu dihafal vs tidak",learn:"Perlu dihafal",skip:"Tidak perlu dihafal",
@@ -21,7 +29,14 @@ const T={
     speak:"Bisa juga diucapkan",speakHint:"Semua istilah di halaman ini sudah dikenali parser suara. Coba ucapkan:"},
   en:{back:"Back to canvas",title:"FE System Design Cheatsheet",
     tagline:"Do not memorise technologies. Memorise the thinking framework and the problem → solution link.",
-    jump:"Jump to a bucket",top:"Back to top",
+    jump:"Jump to a section",top:"Back to top",
+    pipelineChip:"Next.js flow",
+    pipeline:"The Next.js flow: from URL to interactive",
+    pipelineLede:"\u201cWalk me through what happens when the page loads\u201d is a question about this order. Every stage has one thing worth optimising \u2014 that is what makes an answer sound structured rather than memorised.",
+    pipelineShort:"The short version",
+    pipelineNodeHint:"Box name on the canvas",
+    vitals:"Three performance points",
+    vitalsLede:"Almost every performance question lands on one of these three. Tie each one to the stage where it goes wrong.",
     flow:"The thinking framework",flowLede:"These five steps are ordered. Trade-off always closes — that is the part that shows seniority.",
     buckets:"Eight buckets",bucketsLede:"Instead of memorising thirty rows, remember these eight words and the pattern: Requirement → Problem → Technique → Trade-off. Tap one to jump to its section.",
     memo:"Worth memorising vs not",learn:"Worth memorising",skip:"Not worth memorising",
@@ -52,18 +67,20 @@ function DrawButton({onClick,active,label,className=""}:{onClick:()=>void;active
 
 // Which bucket section is under the sticky nav right now, so the matching chip
 // can light up and scroll itself into view on narrow screens.
+const NAV_KEYS=["pipeline",...BUCKETS.map(b=>b.key)];
+
 function useActiveBucket(){
-  const [active,setActive]=useState<Bucket|"">("");
+  const [active,setActive]=useState("");
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{
     let frame=0;
     const read=()=>{
       frame=0;
       const line=(window.innerWidth<640?104:124)+12;
-      let current:Bucket|""="";
-      for(const b of BUCKETS){
-        const el=document.getElementById(b.key);
-        if(el&&el.getBoundingClientRect().top<=line)current=b.key;
+      let current="";
+      for(const key of NAV_KEYS){
+        const el=document.getElementById(key);
+        if(el&&el.getBoundingClientRect().top<=line)current=key;
       }
       setActive(current);setScrolled(window.scrollY>640);
     };
@@ -98,23 +115,25 @@ export default function Cheatsheet(){
   },[execute,router]);
   const drawRow=(row:Row)=>draw([rowToStatement(row)],row.node);
   const drawBucket=(bucket:Bucket)=>draw(CHEATSHEET.filter(r=>r.bucket===bucket).map(rowToStatement),bucket);
+  const drawPipeline=()=>draw(pipelineToStatements(),"pipeline");
 
   return <main className="min-h-dvh overflow-x-hidden bg-[#07100e] pb-20 sm:pb-24">
     <header className="glass sticky top-0 z-20 border-b border-[#24352e]">
       <div className="mx-auto flex h-14 max-w-[980px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
         <Link href="/" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#9bafa6] transition hover:bg-[#17251f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <ArrowLeft size={16}/><span className="hidden sm:inline">{L.back}</span></Link>
-        <label className="relative flex items-center">
-          <Languages className="pointer-events-none absolute left-2.5 text-[#71877d]" size={15}/>
-          <select aria-label={lang==="id"?"Bahasa halaman":"Page language"} value={lang} onChange={e=>setLang(e.target.value as "id"|"en")}
-            className="appearance-none rounded-lg border border-[#2a3d35] bg-[#10201b] py-1.5 pl-8 pr-3 text-xs text-[#dce9e2]">
-            <option value="id">Bahasa Indonesia</option><option value="en">English</option></select></label>
+        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa halaman":"Page language"} className="h-9 w-[52px] rounded-lg border-[#2a3d35] bg-[#10201b] px-2.5 text-xs text-[#dce9e2] sm:w-[168px]"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent className="border-[#2a3d35] bg-[#0d1916] text-[#dce9e2]"><SelectItem value="id">Bahasa Indonesia</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select>
       </div>
     </header>
 
     <nav aria-label={L.jump} className="glass sticky top-14 z-10 border-b border-[#1e2e27] sm:top-16">
       <div className="mx-auto max-w-[980px] px-4 sm:px-6">
         <div ref={strip} className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-2.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <a href="#pipeline" ref={el=>{chips.current.pipeline=el}}
+            aria-current={active==="pipeline"?"true":undefined}
+            className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active==="pipeline"?"border-primary bg-primary text-primary-foreground":"border-primary/45 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20")}>
+            <Route size={13}/>{L.pipelineChip}<span className={active==="pipeline"?"text-primary-foreground/70":"text-primary/60"}>{PIPELINE.length}</span></a>
+          <span aria-hidden="true" className="my-1 w-px shrink-0 bg-[#25382f]"/>
           {BUCKETS.map(b=><a key={b.key} href={"#"+b.key} ref={el=>{chips.current[b.key]=el}}
             aria-current={active===b.key?"true":undefined}
             className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active===b.key?"border-primary/60 bg-primary/12 text-primary":"border-[#2a3d35] bg-[#10201b] text-[#a9bcb2] hover:border-primary/40 hover:text-white")}>
@@ -128,6 +147,50 @@ export default function Cheatsheet(){
         <div className="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground"><Target size={20}/></div>
         <h1 className="text-[27px] font-semibold leading-[1.12] tracking-tight text-[#eef7f2] sm:text-[34px] lg:text-[40px]">{L.title}</h1>
         <p className="mt-3 max-w-[58ch] text-[14px] leading-relaxed text-[#9db0a7] sm:text-[15px]">{L.tagline}</p>
+      </section>
+
+      <section id="pipeline" className={ANCHOR+" border-b border-[#1e2e27] py-9 sm:py-11"}>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-[#e6f1eb]"><Route size={17} className="text-primary"/>{L.pipeline}</h2>
+            <p className="mt-1.5 max-w-[62ch] text-sm text-[#8fa49b]">{L.pipelineLede}</p>
+          </div>
+          <DrawButton onClick={drawPipeline} active={drawn==="pipeline"} label={L.drawAll}/>
+        </div>
+
+        <div className="rounded-2xl border border-[#25382f] bg-[#0c1815] p-4 sm:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#5f746a]">{L.pipelineShort}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-2">
+            {PIPELINE_SHORT.map((step,i)=><span key={step} className="flex items-center gap-1.5">
+              {i>0&&<ArrowRight size={11} className="text-[#3f5349]"/>}
+              <span className="rounded-md bg-[#0f1c18] px-2 py-1 text-xs text-[#cfe0d6]">{step}</span></span>)}
+          </div>
+        </div>
+
+        <ol className="mt-2 grid gap-2">
+          {PIPELINE.map((stage,i)=><li key={stage.node} className="flex gap-3 rounded-xl border border-[#25382f] bg-[#0c1815] px-3.5 py-3">
+            <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/12 text-[11px] font-semibold text-primary">{i+1}</span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-[14px] font-semibold text-[#e6f1eb]">{stage[lang]}</h3>
+                {stage.node!==stage[lang]&&<span title={L.pipelineNodeHint} className="rounded bg-[#0f1c18] px-1.5 py-0.5 text-[10px] text-[#5f746a]">{stage.node}</span>}
+              </div>
+              <p className="mt-1 text-[13px] leading-relaxed text-[#8fa49b]">{stage.notes[lang]}</p>
+            </div>
+          </li>)}
+        </ol>
+
+        <h3 className="mt-8 flex items-center gap-2 text-[15px] font-semibold text-[#e6f1eb]"><Gauge size={15} className="text-[#ff8f6b]"/>{L.vitals}</h3>
+        <p className="mb-4 mt-1.5 max-w-[62ch] text-sm text-[#8fa49b]">{L.vitalsLede}</p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {WEB_VITALS.map(v=><div key={v.node} className="rounded-xl border border-[#25382f] bg-[#0c1815] px-3.5 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[13px] font-semibold text-[#ff8f6b]">{v.node}</span>
+              <span className="rounded bg-[#0f1c18] px-1.5 py-0.5 text-[10px] text-[#5f746a]">{v.at}</span>
+            </div>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-[#8fa49b]">{v[lang]}</p>
+          </div>)}
+        </div>
       </section>
 
       <section className="border-b border-[#1e2e27] py-9 sm:py-11">

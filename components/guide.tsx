@@ -4,6 +4,7 @@ import Link from "next/link";
 import {ArrowLeft,ArrowRight,Check,GitBranch,Languages,Lightbulb,LifeBuoy,Mic,Quote} from "lucide-react";
 import {guide,wordsByKind,guideKinds} from "@/lib/guide";
 import {type DiagramKind} from "@/lib/diagram";
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select";
 
 const KIND_COLOR:Record<DiagramKind,string>={client:"#b7f774",edge:"#65d9e8",app:"#ffbd68",service:"#a990ff",data:"#ff9bc7"};
 const KINDS=guideKinds;
@@ -39,13 +40,7 @@ export default function Guide(){
         <Link href="/" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#9bafa6] transition hover:bg-[#17251f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <ArrowLeft size={16}/><span className="hidden sm:inline">{G.back}</span>
         </Link>
-        <label className="relative flex items-center">
-          <Languages className="pointer-events-none absolute left-2.5 text-[#71877d]" size={15}/>
-          <select aria-label={lang==="id"?"Bahasa panduan":"Guide language"} value={lang} onChange={e=>setLang(e.target.value as "id"|"en")}
-            className="appearance-none rounded-lg border border-[#2a3d35] bg-[#10201b] py-1.5 pl-8 pr-3 text-xs text-[#dce9e2]">
-            <option value="id">Bahasa Indonesia</option><option value="en">English</option>
-          </select>
-        </label>
+        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa panduan":"Guide language"} className="h-9 w-[52px] rounded-lg border-[#2a3d35] bg-[#10201b] px-2.5 text-xs text-[#dce9e2] sm:w-[168px]"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent className="border-[#2a3d35] bg-[#0d1916] text-[#dce9e2]"><SelectItem value="id">Bahasa Indonesia</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select>
       </div>
     </header>
 

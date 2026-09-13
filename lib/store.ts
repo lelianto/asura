@@ -3,9 +3,12 @@ import {create} from "zustand";
 import {addEdge,applyEdgeChanges,applyNodeChanges,MarkerType} from "@xyflow/react";
 import type {Edge,EdgeChange,Node,NodeChange} from "@xyflow/react";
 import {kindOf,normalize} from "./diagram.ts";
-import type {DiagramCommand} from "./diagram";
+import type {DiagramCommand,NodeKind} from "./diagram";
 type Snapshot={nodes:Node[];edges:Edge[]};
-type State=Snapshot&{past:Snapshot[];future:Snapshot[];execute:(c:DiagramCommand[])=>boolean;undo:()=>void;redo:()=>void;clear:()=>void;remove:(nodeIds:string[],edgeIds?:string[])=>boolean;rename:(id:string,label:string)=>boolean;onNodesChange:(c:NodeChange[])=>void;onEdgesChange:(c:EdgeChange[])=>void};
+// A dashed line is normally inferred from geometry, so a hand-drawn one has to say
+// so explicitly; the canvas reads this back off `edge.data`.
+export type EdgeVariant="solid"|"dashed";
+type State=Snapshot&{past:Snapshot[];future:Snapshot[];execute:(c:DiagramCommand[])=>boolean;undo:()=>void;redo:()=>void;clear:()=>void;remove:(nodeIds:string[],edgeIds?:string[])=>boolean;rename:(id:string,label:string)=>boolean;load:(nodes:Node[],edges:Edge[])=>void;addNode:(label:string,kind?:NodeKind)=>boolean;link:(sourceId:string,targetId:string,variant:EdgeVariant)=>boolean;setEdgeVariant:(edgeId:string,variant:EdgeVariant)=>boolean;onNodesChange:(c:NodeChange[])=>void;onEdgesChange:(c:EdgeChange[])=>void};
 // A long voice session emits a command every few seconds; cap the snapshot stack.
 const HISTORY_LIMIT=100;
 const initial:Snapshot={nodes:[],edges:[]};
@@ -52,5 +55,27 @@ return{...initial,past:[],future:[],
     // Two nodes sharing a label would make every later voice command ambiguous.
     if(get().nodes.some(n=>n.id!==id&&String(n.data.label).toLowerCase()===next.toLowerCase()))return false;
     commit({nodes:get().nodes.map(n=>n.id===id?{...n,data:{...n.data,label:next,kind:kindOf(next)}}:n),edges:get().edges});return true},
+  // Opening a saved design replaces the canvas through the same commit path, so the
+  // diagram it displaced stays one undo away.
+  load(nodes,edges){commit({nodes,edges})},
+  // The manual editor builds the same diagram speech does, so it reuses the same
+  // guards: labels are normalised, and a duplicate would make every later voice
+  // command ambiguous.
+  addNode(label,kind){const next=normalize(label);if(!next)return false;
+    const nodes=get().nodes;
+    if(nodes.some(n=>String(n.data.label).toLowerCase()===next.toLowerCase()))return false;
+    const last=nodes[nodes.length-1];
+    const node:Node={id:slug(next)+"-"+Date.now()+"-"+nodes.length,position:{x:last?last.position.x+220:100,y:last?last.position.y:150},data:{label:next,kind:kind??kindOf(next)}};
+    commit({nodes:[...nodes,node],edges:get().edges});return true},
+  // Connects two nodes that already exist, unlike CONNECT which creates what it names.
+  link(sourceId,targetId,variant){if(sourceId===targetId)return false;
+    const nodes=get().nodes;
+    if(!nodes.some(n=>n.id===sourceId)||!nodes.some(n=>n.id===targetId))return false;
+    const edges=get().edges;
+    if(edges.some(e=>e.source===sourceId&&e.target===targetId))return false;
+    commit({nodes,edges:addEdge({id:sourceId+"-"+targetId,source:sourceId,target:targetId,animated:true,data:{variant},style:{stroke:"#446b5f",strokeWidth:1.5},markerEnd:{type:MarkerType.ArrowClosed,color:"#65d9e8",width:15,height:15}},edges)});return true},
+  setEdgeVariant(edgeId,variant){const edges=get().edges,edge=edges.find(e=>e.id===edgeId);
+    if(!edge||(edge.data?.variant??"solid")===variant)return false;
+    commit({nodes:get().nodes,edges:edges.map(e=>e.id===edgeId?{...e,data:{...e.data,variant}}:e)});return true},
   onNodesChange(c){set({nodes:applyNodeChanges(c,get().nodes)})},onEdgesChange(c){set({edges:applyEdgeChanges(c,get().edges)})}
 }});
