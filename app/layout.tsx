@@ -9,5 +9,16 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="id"><body>{children}</body></html>;
+  return (
+    <html lang="id">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener("error",function(e){if(e&&e.message&&e.message.indexOf("ResizeObserver")!==-1){e.stopImmediatePropagation();e.preventDefault();}},true);`
+          }}
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
