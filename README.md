@@ -113,12 +113,30 @@ Replace the filename with the pending migration and `DB` with your D1 binding na
 - `npm run install:ci`: perform the one locked dependency install
 - `npm run dev`: start the Vite/Vinext development server
 - `npm run build`: build the deployable Sites artifact
+- `npm run build:next`: plain `next build`, used by the Vercel and Netlify deployments
 - `npm run start`: preview the built Worker locally with D1/R2 support
 - `npm run db:generate`: generate Drizzle migrations after schema changes
 
 When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
 
 The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
+
+## Deploying to Vercel or Netlify
+
+The site ships two build targets. `npm run build` produces the Cloudflare
+Worker artifact for Sites; `npm run build:next` runs a plain `next build` and is
+what `vercel.json` and `netlify.toml` invoke. Keeping them separate means the
+Sites/Workers flow is unaffected by the hosted deployments.
+
+No database is required. `db/index.ts` deliberately holds no driver and no
+`cloudflare:workers` import, so every route prerenders statically and the build
+succeeds with an empty environment. Call `isDatabaseReady()` from that module
+before touching data so a feature can degrade instead of failing the request
+while the database is still being provisioned; the Cloudflare D1 client now
+lives in `examples/d1/db/client.ts`.
+
+When a Postgres (Neon) database is ready, set `DATABASE_URL` in the host's
+environment settings, install a driver, and build the client inside `getDb()`.
 
 ## Learn More
 

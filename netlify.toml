@@ -1,0 +1,12 @@
+# Netlify uses the plain Next.js build, not the Cloudflare/vinext build that
+# `npm run build` performs for the Sites/Workers target.
+[build]
+  command = "npm run build:next"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22.13.0"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

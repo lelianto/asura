@@ -1,0 +1,7 @@
+# Cloudflare/vinext build artifacts and local tool state — never needed by the
+# Next.js build that runs on Vercel.
+dist
+.wrangler
+.vinext
+.sites-runtime
+examples
