@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../vendor/shadcn-tailwind-4.13.0.css";
+
+:root {
+  --background:#07100e; --foreground:#f0f7f3; --card:#0d1815; --card-foreground:#f0f7f3;
+  --primary:#b7f774; --primary-foreground:#102009; --secondary:#16231f; --secondary-foreground:#dce9e2;
+  --muted:#14201d; --muted-foreground:#8fa49b; --accent:#b7f774; --accent-foreground:#102009;
+  --destructive:#ff796f; --border:#273730; --input:#273730; --ring:#b7f774; --radius:.9rem;
+}
+@theme inline {
+  --color-background:var(--background); --color-foreground:var(--foreground); --color-card:var(--card);
+  --color-card-foreground:var(--card-foreground); --color-primary:var(--primary); --color-primary-foreground:var(--primary-foreground);
+  --color-secondary:var(--secondary); --color-secondary-foreground:var(--secondary-foreground); --color-muted:var(--muted);
+  --color-muted-foreground:var(--muted-foreground); --color-accent:var(--accent); --color-accent-foreground:var(--accent-foreground);
+  --color-destructive:var(--destructive); --color-border:var(--border); --color-input:var(--input); --color-ring:var(--ring);
+  --font-sans:"Avenir Next",Avenir,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--background);color:var(--foreground)}
+body{font-family:"Avenir Next",Avenir,"Segoe UI",sans-serif} button,select,input{font:inherit} button{cursor:pointer}
+.canvas-grid{background-color:#091411;background-image:radial-gradient(circle,rgba(183,247,116,.13) 1px,transparent 1px);background-size:24px 24px}
+.glass{background:rgba(11,22,18,.88);backdrop-filter:blur(18px)}
+.pulse-ring::before,.pulse-ring::after{content:"";position:absolute;inset:-8px;border:1px solid rgba(183,247,116,.38);border-radius:999px;animation:pulse 2.2s infinite ease-out}
+.pulse-ring::after{animation-delay:1.1s}@keyframes pulse{0%{transform:scale(.75);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.react-flow__attribution{display:none}.react-flow__controls{box-shadow:none!important;border:1px solid #2a3d35;border-radius:12px;overflow:hidden}
+.react-flow__controls-button{background:#10201b!important;border-color:#2a3d35!important;fill:#d7e8df!important}
+.react-flow__minimap{border:1px solid #2a3d35;border-radius:12px;overflow:hidden}@media(max-width:700px){.react-flow__minimap{display:none}}
