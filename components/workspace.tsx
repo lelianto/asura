@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useMemo,useRef,useState} from "react";
-import {ReactFlow,Background,Controls,Handle,MiniMap,Position,ReactFlowProvider,useReactFlow,type NodeProps} from "@xyflow/react";
+import {ReactFlow,Background,Controls,Handle,MiniMap,Position,ReactFlowProvider,useReactFlow,type Edge,type Node,type NodeProps} from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import {ArrowRight,AudioWaveform,ChevronDown,Command,CornerDownLeft,GitBranch,Languages,LayoutGrid,Mic,MicOff,Plus,Redo2,RotateCcw,Trash2,X} from "lucide-react";
 import {Button} from "@/components/ui/button";
@@ -18,11 +18,12 @@ const labels={
 
 function SystemNode({data,selected}:NodeProps){const label=String(data.label);const kind=String(data.kind||"service");const color=kind==="client"?"#b7f774":kind==="edge"?"#65d9e8":kind==="app"?"#ffbd68":"#a990ff";return <div className="min-w-[164px] rounded-2xl border bg-[#10201b] px-5 py-4 shadow-[0_12px_28px_rgba(0,0,0,.32)]" style={{borderColor:selected?color:"#30463d"}}><Handle type="target" position={Position.Left} style={{background:color,border:0,width:8,height:8}}/><div className="mb-3 flex items-center justify-between"><span className="h-2 w-2 rounded-full" style={{background:color}}/><span className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#71877d]">{kind}</span></div><div className="text-[15px] font-semibold text-[#edf7f1]">{label}</div><Handle type="source" position={Position.Right} style={{background:color,border:0,width:8,height:8}}/></div>}
 const nodeTypes={system:SystemNode};
+function arrange(nodes:Node[],edges:Edge[]){const g=new dagre.graphlib.Graph();g.setDefaultEdgeLabel(()=>({}));g.setGraph({rankdir:"LR",ranksep:90,nodesep:65});nodes.forEach(n=>g.setNode(n.id,{width:164,height:82}));edges.forEach(e=>g.setEdge(e.source,e.target));dagre.layout(g);return nodes.map(n=>{const p=g.node(n.id);return{...n,position:{x:p.x-82,y:p.y-41}}})}
 
 function Canvas({onLog}:{onLog:(l:Log)=>void}){
   const {nodes,edges,onNodesChange,onEdgesChange,execute,undo,redo,clear,past,future}=useDiagramStore();const flow=useReactFlow();
-  const [lang,setLang]=useState<"id"|"en">("id");const [status,setStatus]=useState<Status>("initializing");const [interim,setInterim]=useState("");const [logs,setLogs]=useState<Log[]>([{text:"User ke CDN lalu ke Next.js lalu ke BFF",applied:true,time:"baru saja"}]);const [typed,setTyped]=useState("");const [seconds,setSeconds]=useState(0);const speech=useRef<WebSpeechProvider|null>(null);const L=labels[lang];
-  const submit=useCallback((raw:string)=>{const text=raw.trim();if(!text)return;setStatus("processing");const commands=parseIntent(text);if(commands.length)execute(commands);const log={text,applied:commands.length>0,time:new Date().toLocaleTimeString(lang==="id"?"id-ID":"en-US",{hour:"2-digit",minute:"2-digit"})};setLogs(x=>[log,...x].slice(0,5));onLog(log);setInterim("");window.setTimeout(()=>setStatus("listening"),320)},[execute,lang,onLog]);
+  const [lang,setLang]=useState<"id"|"en">("id");const [status,setStatus]=useState<Status>("initializing");const [interim,setInterim]=useState("");const [,setLogs]=useState<Log[]>([]);const [typed,setTyped]=useState("");const [seconds,setSeconds]=useState(0);const speech=useRef<WebSpeechProvider|null>(null);const L=labels[lang];
+  const submit=useCallback((raw:string)=>{const text=raw.trim();if(!text)return;setStatus("processing");const commands=parseIntent(text);if(commands.length){execute(commands);window.setTimeout(()=>{const current=useDiagramStore.getState();useDiagramStore.setState({nodes:arrange(current.nodes,current.edges)});window.setTimeout(()=>flow.fitView({padding:.24,duration:450,maxZoom:1.15}),80)},80)}const log={text,applied:commands.length>0,time:new Date().toLocaleTimeString(lang==="id"?"id-ID":"en-US",{hour:"2-digit",minute:"2-digit"})};setLogs(x=>[log,...x].slice(0,5));onLog(log);setInterim("");window.setTimeout(()=>setStatus("listening"),320)},[execute,flow,lang,onLog]);
   useEffect(()=>{const p=new WebSpeechProvider();speech.current=p;p.setLanguage(lang==="id"?"id-ID":"en-US");const unsub=p.subscribe(e=>{setInterim(e.transcript);if(e.isFinal&&(!e.confidence||e.confidence>=.55))submit(e.transcript)});p.start().then(()=>setStatus("listening")).catch(err=>setStatus(err.message==="unsupported"?"unavailable":"denied"));return()=>{unsub();p.stop()}},[]);
   useEffect(()=>{speech.current?.setLanguage(lang==="id"?"id-ID":"en-US")},[lang]);
   useEffect(()=>{
@@ -33,7 +34,7 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
   },[execute]);
   useEffect(()=>{if(status==="ended")return;const id=setInterval(()=>setSeconds(x=>x+1),1000);return()=>clearInterval(id)},[status]);
   const time=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
-  const layout=()=>{const g=new dagre.graphlib.Graph();g.setDefaultEdgeLabel(()=>({}));g.setGraph({rankdir:"LR",ranksep:90,nodesep:65});nodes.forEach(n=>g.setNode(n.id,{width:164,height:82}));edges.forEach(e=>g.setEdge(e.source,e.target));dagre.layout(g);useDiagramStore.setState({nodes:nodes.map(n=>{const p=g.node(n.id);return{...n,position:{x:p.x-82,y:p.y-41}}})});window.setTimeout(()=>flow.fitView({padding:.25,duration:500}),40)};
+  const layout=()=>{useDiagramStore.setState({nodes:arrange(nodes,edges)});window.setTimeout(()=>flow.fitView({padding:.24,duration:500,maxZoom:1.15}),180)};
   const displayNodes=useMemo(()=>nodes.map(n=>({...n,type:"system"})),[nodes]);
   const retry=()=>{setStatus("initializing");speech.current?.start().then(()=>setStatus("listening")).catch(()=>setStatus("denied"))};
   return <main className="flex h-dvh min-h-[620px] flex-col overflow-hidden bg-[#07100e]">

@@ -22,25 +22,39 @@ export function normalize(raw:string){
 }
 const clean=(s:string)=>normalize(s).replace(/^(our|the|sebuah|si)\s+/i,"").trim().replace(/\s+(kita|kami)$/i,"").trim();
 
+// Words that link two nodes in a chain, e.g. "User ke CDN", "User to CDN".
+const LINK=/\s+(?:(?:lalu|kemudian|then)\s+)?(?:ke|to)\s+/i;
+
 export function parseIntent(raw:string):DiagramCommand[]{
   const text=normalize(raw);
   if(/^(undo|balik|batalkan( yang terakhir)?)$/i.test(text))return[{type:"UNDO"}];
   if(/^(redo|ulangi( lagi)?)$/i.test(text))return[{type:"REDO"}];
-  let m=text.match(/^(?:hapus|delete|remove)\s+(.+)$/i);
+  let m=text.match(/^(?:putuskan|lepaskan|disconnect|unlink)\s+(?:koneksi\s+)?(?:dari\s+|from\s+)?(.+?)\s+(?:dari|from|ke|to)\s+(.+)$/i);
+  if(m)return[{type:"DISCONNECT",from:clean(m[1]),to:clean(m[2])}];
+  m=text.match(/^(?:hapus|delete|remove)\s+(.+)$/i);
   if(m)return[{type:"DELETE_NODE",target:clean(m[1])}];
   m=text.match(/^(?:ganti|ubah|rename)\s+(.+?)\s+(?:jadi|menjadi|to)\s+(.+)$/i);
   if(m)return[{type:"RENAME_NODE",target:clean(m[1]),newLabel:clean(m[2])}];
   m=text.match(/^(.+?)\s+(?:bercabang ke|branches? to)\s+(.+)$/i);
   if(m)return[{type:"BRANCH",from:clean(m[1]),targets:m[2].split(/\s+(?:dan|and)\s+|,/i).map(clean).filter(Boolean)}];
   m=text.match(/^(?:tambahkan|tambah|buat|add|create)\s+(.+)$/i);
-  if(m)return[{type:"ADD_NODE",label:clean(m[1])}];
-  m=text.match(/^dari\s+(.+?)\s+ke\s+(.+)$/i);
+  // "tambahkan Redis ke BFF" adds the node *and* wires it up; "tambahkan Redis" only adds.
+  if(m)return LINK.test(m[1])?chainFrom(m[1]):[{type:"ADD_NODE",label:clean(m[1])}];
+  m=text.match(/^(?:dari|from)\s+(.+)$/i);
+  if(m&&LINK.test(m[1]))return chainFrom(m[1]);
+  m=text.match(/^(?:connect\s+)?(.+?)\s+(?:terhubung ke|connects? to|masuk melalui|menuju)\s+(.+)$/i);
   if(m)return chain(clean(m[1]),m[2]);
-  m=text.match(/^(?:connect\s+)?(.+?)\s+(?:terhubung ke|connects? to|masuk melalui|menuju|ke)\s+(.+)$/i);
-  if(m)return chain(clean(m[1]),m[2]);
+  if(LINK.test(text))return chainFrom(text);
   return[];
 }
+// Split a full phrase such as "User ke CDN lalu ke Next.js" into consecutive CONNECTs.
+function chainFrom(phrase:string):DiagramCommand[]{
+  const parts=phrase.split(LINK).map(clean).filter(Boolean);
+  return link(parts);
+}
 function chain(first:string,tail:string):DiagramCommand[]{
-  const parts=[first,...tail.split(/\s+(?:(?:lalu|kemudian|then)\s+)?ke\s+/i).map(clean)].filter(Boolean);
+  return link([first,...tail.split(LINK).map(clean)].filter(Boolean));
+}
+function link(parts:string[]):DiagramCommand[]{
   return parts.slice(0,-1).map((from,i)=>({type:"CONNECT",from,to:parts[i+1]}));
 }
