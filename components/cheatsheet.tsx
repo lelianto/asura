@@ -420,7 +420,7 @@ export default function Cheatsheet(){
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} title={L.top} aria-label={L.top}
       aria-hidden={!scrolled} tabIndex={scrolled?0:-1}
       style={{bottom:"max(1.25rem, env(safe-area-inset-bottom))"}}
-      className={"fixed right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-[#2a3d35] bg-[#10201b]/95 text-[#cfe0d6] shadow-[0_10px_24px_rgba(0,0,0,.4)] backdrop-blur transition hover:border-primary/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:hidden "+(scrolled?"opacity-100":"pointer-events-none opacity-0")}>
+      className={"fixed right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-[#2a3d35] bg-[#10201b]/95 text-[#cfe0d6] shadow-[0_10px_24px_rgba(0,0,0,.4)] backdrop-blur transition hover:border-primary/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:right-6 "+(scrolled?"opacity-100":"pointer-events-none opacity-0")}>
       <ArrowUp size={18}/></button>
   </main>;
 }
