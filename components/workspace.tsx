@@ -67,6 +67,7 @@ function SystemNode({id,data,selected}:NodeProps){
       // Key events are stopped so React Flow does not read Backspace as "delete this node".
       :<input autoFocus value={draft} aria-label={L.editNode} onChange={e=>setDraft(e.target.value)} onBlur={commit} onKeyDown={e=>{e.stopPropagation();if(e.key==="Enter")commit();if(e.key==="Escape")setDraft(null)}} className="nodrag nopan w-full rounded-md border border-[#3c5a4e] bg-[#081511] px-2 py-1 text-[15px] font-semibold text-[#edf7f1] outline-none"/>}
     {tech&&<div className="mt-1 text-[11px] text-[#8aa79a]">{tech}</div>}
+    {Boolean(data.note)&&<div className="mt-1 max-w-[220px] text-[11px] leading-relaxed text-[#8aa79a]">{String(data.note)}</div>}
     <Handle type="source" position={Position.Right} style={{background:color,border:0,width:8,height:8}}/>
   </div>;
 }
@@ -314,9 +315,9 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
   useEffect(()=>{
     const context=(document as Document&{modelContext?:{registerTool:(tool:unknown,options?:{signal?:AbortSignal})=>void|Promise<void>}}).modelContext;
     if(!context?.registerTool)return;const lifecycle=new AbortController();
-    void Promise.resolve(context.registerTool({name:"apply_diagram_statement",title:"Apply diagram statement",description:"Apply one explicit Indonesian or English architecture statement to the visible diagram using the deterministic parser.",inputSchema:{type:"object",properties:{statement:{type:"string"}},required:["statement"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:(input:unknown)=>{const statement=(input as {statement?:unknown})?.statement;if(typeof statement!=="string"||!statement.trim())throw new Error("statement must be a non-empty string");const commands=parseIntent(statement);if(!commands.length)return{applied:false,reason:"No explicit diagram command detected"};if(!execute(commands))return{applied:false,reason:"Command left the diagram unchanged"};return{applied:true,commandCount:commands.length}}},{signal:lifecycle.signal})).catch(()=>undefined);
+    void Promise.resolve(context.registerTool({name:"apply_diagram_statement",title:"Apply diagram statement",description:"Apply one explicit Indonesian or English architecture statement to the visible diagram using the deterministic parser.",inputSchema:{type:"object",properties:{statement:{type:"string"}},required:["statement"],additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:(input:unknown)=>{const statement=(input as {statement?:unknown})?.statement;if(typeof statement!=="string"||!statement.trim())throw new Error("statement must be a non-empty string");const commands=parseIntent(statement);if(!commands.length)return{applied:false,reason:"No explicit diagram command detected"};if(!execute(commands))return{applied:false,reason:"Command left the diagram unchanged"};window.setTimeout(()=>{const current=useDiagramStore.getState();if(!isManualLayout.current){const res=arrangeSectioned(current.nodes,current.edges);useDiagramStore.setState({nodes:res.arrangedNodes});setExtras({extraNodes:res.extraNodes,rewiredEdges:res.rewiredEdges})}window.setTimeout(()=>flow.fitView({padding:.24,duration:450,maxZoom:1.15}),100)},60);return{applied:true,commandCount:commands.length}}},{signal:lifecycle.signal})).catch(()=>undefined);
     return()=>lifecycle.abort();
-  },[execute]);
+  },[execute,flow]);
   // The browser can leave fullscreen without asking (Escape), so mirror the document
   // rather than trusting the button to stay in step with it.
   useEffect(()=>{const sync=()=>setIsFullscreen(Boolean(document.fullscreenElement));

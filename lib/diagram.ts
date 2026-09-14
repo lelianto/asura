@@ -5,6 +5,7 @@ export type DiagramCommand =
   | { type: "DISCONNECT"; from: string; to: string }
   | { type: "RENAME_NODE"; target: string; newLabel: string }
   | { type: "SET_TECH"; target: string; tech: string }
+  | { type: "SET_NOTE"; target: string; note: string }
   | { type: "BRANCH"; from: string; targets: string[] }
   | { type: "CLEAR" }
   | { type: "UNDO" } | { type: "REDO" };
@@ -308,7 +309,11 @@ function term(raw:string):Term{
 // when a capital follows it, because dictation spells the name out as "next. js" too.
 export function parseIntent(raw:string):DiagramCommand[]{
   return raw.split(/[.!?;]+\s+(?=[A-Z])|\n+/).flatMap(sentence=>{
-    const text=normalize(sentence);
+    // Keep quoted note prose byte-for-byte. Normal vocabulary replacement is useful
+    // for node names, but it must not rewrite "compression" to "Compression" inside
+    // a user's annotation before the note grammar gets a chance to capture it.
+    const isNote=/^(?:tambahkan|tambah|add)\s+(?:catatan|note)\s+["“]/i.test(sentence.trim());
+    const text=isNote?sentence.trim().replace(/[.!?]+$/g,""):normalize(sentence);
     return text?splitClauses(text).flatMap(c=>guard(parseClause(c))):[];
   });
 }
@@ -326,6 +331,7 @@ function guard(commands:DiagramCommand[]):DiagramCommand[]{
     c.type==="CONNECT"||c.type==="DISCONNECT"?[c.from,c.to]:
     c.type==="RENAME_NODE"?[c.target,c.newLabel]:
     c.type==="SET_TECH"?[c.target,c.tech]:
+    c.type==="SET_NOTE"?[c.target]:
     c.type==="BRANCH"?[c.from,...c.targets]:[]);
   return names.every(plausible)?commands:[];
 }
@@ -356,6 +362,11 @@ const PREAMBLE=/^(?:(untuk|kalau|jika|ketika|saat|sementara|sedangkan|karena|aga
 const mentionsKnown=(text:string)=>{const low=text.toLowerCase();for(const label of kinds.keys())if(low.includes(label))return true;return false};
 function parseClause(raw:string):DiagramCommand[]{
   let text=raw.trim();
+  // Notes are deliberately quoted because their prose may contain command words,
+  // commas, and long explanations. Parse them before prose guards: a legitimate
+  // annotation may itself contain "hindari" without negating the command.
+  let m=text.match(/^(?:tambahkan|tambah|add)\s+(?:catatan|note)\s+["“](.+?)["”]\s+(?:pada|ke|untuk|to)\s+(.+)$/i);
+  if(m)return[{type:"SET_NOTE",target:clean(m[2]),note:m[1].trim()}];
   if(NEGATED.test(text))return[];
   // Only drop the opening phrase when it carries no statement of its own.
   const preamble=text.match(PREAMBLE);
@@ -368,7 +379,7 @@ function parseClause(raw:string):DiagramCommand[]{
   // "hapus semua node", "bersihkan kanvas", "clear all" wipe everything; the object is
   // required, so a stray "clear" picked up from conversation cannot erase the diagram.
   if(CLEAR_ALL.test(text.replace(PARTICLE,"").trim()))return[{type:"CLEAR"}];
-  let m=text.match(new RegExp(`^(?:(?:putuskan|lepaskan|disconnect|unlink)|(?:${DEL_WORDS})\\s+(?:(?:semua|seluruh|all)\\s+)?(?:koneksi|connection|edge|link))\\s+`+`(?:koneksi\\s+)?(?:dari\\s+|from\\s+)?(.+?)\\s+(?:dari|from|ke|to)\\s+(.+)$`,"i"));
+  m=text.match(new RegExp(`^(?:(?:putuskan|lepaskan|disconnect|unlink)|(?:${DEL_WORDS})\\s+(?:(?:semua|seluruh|all)\\s+)?(?:koneksi|connection|edge|link))\\s+`+`(?:koneksi\\s+)?(?:dari\\s+|from\\s+)?(.+?)\\s+(?:dari|from|ke|to)\\s+(.+)$`,"i"));
   if(m)return[{type:"DISCONNECT",from:clean(m[1]),to:clean(m[2])}];
   m=text.match(new RegExp(`^(?:${DEL_WORDS})\\s+(.+)$`,"i"));
   if(m)return[{type:"DELETE_NODE",target:clean(m[1])}];

@@ -27,7 +27,7 @@ penolakan, dan API program.
 ```
 npm run install:ci     # sekali, instal terkunci
 npm run dev            # server pengembangan, port 5173
-npm test               # 90 test (butuh Node >= 22.13)
+npm test               # 172 test (butuh Node >= 22.13)
 ```
 
 Buka aplikasi, izinkan mikrofon, lalu ucapkan:
@@ -51,6 +51,7 @@ Tanpa mikrofon, gunakan kolom ketik di kanan bawah atau klik chip pada panel
 | **Label** | Nama node. Pencocokan bersifat *case-insensitive* dan harus unik. |
 | **Kind** | Klasifikasi node yang menentukan warnanya: `client`, `edge`, `app`, `service`, `data`. Disimpulkan dari kosakata; default `service`. |
 | **Tech** | Anotasi teknologi opsional yang tampil di bawah label. |
+| **Note** | Catatan bebas opsional yang tampil di bawah node tanpa diubah oleh normalisasi kosakata. |
 | **Edge** | Koneksi berarah dari satu node ke node lain. Duplikat diabaikan. |
 | **Statement** | Satu kalimat ucapan. Bisa menghasilkan nol, satu, atau banyak perintah. |
 
@@ -295,6 +296,24 @@ lain; tidak pernah berdiri sendiri.
 
 "tambahkan Dashboard memakai tan stack query"
   → ADD_NODE "Dashboard", SET_TECH Dashboard = "TanStack Query"
+```
+
+### `SET_NOTE`
+
+Menambahkan catatan bebas pada node yang sudah ada. Isi catatan wajib diapit
+tanda kutip agar koma, istilah teknis, dan kata kerja di dalamnya tidak dibaca
+sebagai perintah diagram.
+
+```
+{ type: "SET_NOTE", target: string, note: string }
+```
+
+```
+"Tambahkan catatan \"URL sederhana dan redirect minimal\" pada URL"
+  → SET_NOTE URL = "URL sederhana dan redirect minimal"
+
+"Add note \"TLS 1.3 and connection reuse\" to HTTPS/TLS"
+  → SET_NOTE HTTPS/TLS = "TLS 1.3 and connection reuse"
 ```
 
 ### `UNDO` / `REDO`
@@ -590,6 +609,7 @@ type DiagramCommand =
   | { type: "DISCONNECT";  from: string; to: string }
   | { type: "RENAME_NODE"; target: string; newLabel: string }
   | { type: "SET_TECH";    target: string; tech: string }
+  | { type: "SET_NOTE";    target: string; note: string }
   | { type: "BRANCH";      from: string; targets: string[] }
   | { type: "UNDO" }
   | { type: "REDO" }
@@ -688,7 +708,7 @@ dibatalkan lewat `AbortController` saat komponen dilepas.
 ## Pengujian
 
 ```
-npm test        # 90 test    (node --test, butuh Node >= 22.13)
+npm test        # 172 test   (node --test, butuh Node >= 22.13)
 npm run typecheck
 npm run lint
 ```

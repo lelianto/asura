@@ -33,6 +33,7 @@ return{...initial,past:[],future:[],
       if(cmd.type==="RENAME_NODE"){const n=find(nodes,cmd.target),taken=find(nodes,cmd.newLabel);if(n&&(!taken||taken.id===n.id)&&String(n.data.label)!==cmd.newLabel){nodes=nodes.map(x=>x.id===n.id?{...x,data:{...x.data,label:cmd.newLabel}}:x);changed=true}}
       // "Web terbuat dari Next.js" annotates the node instead of renaming it.
       if(cmd.type==="SET_TECH"){const n=find(nodes,cmd.target);if(n&&String(n.data.tech??"")!==cmd.tech){nodes=nodes.map(x=>x.id===n.id?{...x,data:{...x.data,tech:cmd.tech}}:x);changed=true}}
+      if(cmd.type==="SET_NOTE"){const n=find(nodes,cmd.target);if(n&&String(n.data.note??"")!==cmd.note){nodes=nodes.map(x=>x.id===n.id?{...x,data:{...x.data,note:cmd.note}}:x);changed=true}}
       if(cmd.type==="CLEAR"){if(nodes.length||edges.length){nodes=[];edges=[];changed=true}}
       if(cmd.type==="DISCONNECT"){const a=find(nodes,cmd.from),b=find(nodes,cmd.to);if(a&&b){const next=edges.filter(e=>!(e.source===a.id&&e.target===b.id));if(next.length!==edges.length){edges=next;changed=true}}}
     }
