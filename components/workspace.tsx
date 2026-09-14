@@ -1,7 +1,7 @@
 "use client";
 import {createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
-import {ReactFlow,Background,Controls,Handle,MiniMap,Position,ReactFlowProvider,useReactFlow,MarkerType,type Edge,type Node,type NodeProps,type NodeChange} from "@xyflow/react";
+import {ReactFlow,Background,Controls,Handle,MiniMap,Position,ReactFlowProvider,useReactFlow,MarkerType,type Connection,type Edge,type Node,type NodeProps,type NodeChange} from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import {ArrowRight,AudioWaveform,Command,CornerDownLeft,FolderOpen,GitBranch,Languages,LayoutGrid,LifeBuoy,Maximize2,Mic,MicOff,Minimize2,PanelBottomClose,PanelBottomOpen,Pencil,Plus,Redo2,RotateCcw,Save,Trash2,Waypoints,X} from "lucide-react";
 import {Button} from "@/components/ui/button";
@@ -24,8 +24,8 @@ if(typeof window!=="undefined"){
 }
 type Status="initializing"|"listening"|"processing"|"denied"|"unavailable"|"ended";
 const labels={
-  id:{title:"asuradraw",session:"SESI AKTIF",listening:"Mendengarkan",processing:"Memproses",initializing:"Menyiapkan mikrofon",denied:"Izin mikrofon ditolak",unavailable:"Pengenalan suara tidak tersedia",ended:"Sesi berakhir",placeholder:"Ketik perintah untuk menguji…",hint:"Ucapkan keputusan arsitektur dengan jelas",undo:"Urungkan",redo:"Ulangi",layout:"Tata otomatis",clear:"Bersihkan",end:"Akhiri sesi",empty:"Ucapan sementara akan muncul di sini",safe:"Tidak ada perubahan — kalimat bukan perintah eksplisit",applied:"Diterapkan",examples:"COBA UCAPKAN",examplesTyped:"CONTOH PERINTAH",confirmTitle:"Bersihkan seluruh diagram?",confirmBody:"Semua node dan koneksi akan dihapus. Anda masih dapat mengurungkannya.",cancel:"Batal",confirm:"Bersihkan",guide:"Panduan",voiceOff:"Sembunyikan mode suara",voiceOn:"Aktifkan mode suara",typeOnly:"Mode ketik",retry:"Coba lagi",nodes:"node",connections:"koneksi",ready:"Kanvas siap",readyHint:"Ucapkan \u201ctambahkan User\u201d untuk mulai",langLabel:"Bahasa pengenalan suara",deleteNode:"Hapus node",editNode:"Ubah nama",editHint:"Klik dua kali untuk mengubah nama, Delete untuk menghapus",dismiss:"Tutup",jumpToSec:"\u2794 Ke Seksi",jumpFromSec:"\u21a9 Dari Seksi",section:"Seksi",manual:"Editor manual",designs:"Desain tersimpan",designsTitle:"Desain tersimpan",designName:"Nama desain",save:"Simpan",openDesign:"Buka desain",deleteDesign:"Hapus desain",noDesigns:"Belum ada desain tersimpan.",saveEmpty:"Kanvas masih kosong — tidak ada yang bisa disimpan.",saveFailed:"Penyimpanan lokal tidak tersedia atau sudah penuh.",savedHint:"Desain disimpan di browser ini saja.",collapse:"Sembunyikan panel bawah",expand:"Tampilkan panel bawah",fullscreen:"Layar penuh",exitFullscreen:"Keluar dari layar penuh",manualTitle:"Editor manual",addBox:"Tambah box",boxLabel:"Nama box, misal Cache Miss",boxKind:"Jenis box",add:"Tambah",addLine:"Tambah garis",lineFrom:"Dari",lineTo:"Ke",solid:"Utuh",dashed:"Putus-putus",lineStyle:"Gaya garis",lineList:"Daftar garis",noLines:"Belum ada garis",needTwoBoxes:"Tambahkan minimal dua box sebelum menarik garis.",boxRejected:"Nama itu kosong atau sudah dipakai box lain.",lineRejected:"Garis itu sudah ada, atau kedua ujungnya box yang sama.",toggleStyle:"Ubah gaya garis",deleteLine:"Hapus garis",sectionSub:"Alur panjang, 4 layer per seksi"},
-  en:{title:"asuradraw",session:"LIVE SESSION",listening:"Listening",processing:"Processing",initializing:"Preparing microphone",denied:"Microphone permission denied",unavailable:"Speech recognition unavailable",ended:"Session ended",placeholder:"Type a command to test…",hint:"State architecture decisions clearly",undo:"Undo",redo:"Redo",layout:"Auto layout",clear:"Clear",end:"End session",empty:"Interim speech will appear here",safe:"No change — not an explicit command",applied:"Applied",examples:"TRY SAYING",examplesTyped:"EXAMPLE COMMANDS",confirmTitle:"Clear the entire diagram?",confirmBody:"All nodes and connections will be removed. You can still undo this.",cancel:"Cancel",confirm:"Clear",guide:"Guide",voiceOff:"Hide voice mode",voiceOn:"Turn on voice mode",typeOnly:"Type-only mode",retry:"Try again",nodes:"nodes",connections:"connections",ready:"Canvas ready",readyHint:"Say \u201cadd User\u201d to begin",langLabel:"Speech recognition language",deleteNode:"Delete node",editNode:"Rename",editHint:"Double-click to rename, Delete to remove",dismiss:"Dismiss",jumpToSec:"\u2794 To Section",jumpFromSec:"\u21a9 From Section",section:"Section",manual:"Manual editor",designs:"Saved designs",designsTitle:"Saved designs",designName:"Design name",save:"Save",openDesign:"Open design",deleteDesign:"Delete design",noDesigns:"No saved designs yet.",saveEmpty:"The canvas is empty — there is nothing to save.",saveFailed:"Local storage is unavailable or full.",savedHint:"Designs are stored in this browser only.",collapse:"Hide bottom panel",expand:"Show bottom panel",fullscreen:"Full screen",exitFullscreen:"Exit full screen",manualTitle:"Manual editor",addBox:"Add box",boxLabel:"Box name, e.g. Cache Miss",boxKind:"Box kind",add:"Add",addLine:"Add line",lineFrom:"From",lineTo:"To",solid:"Solid",dashed:"Dashed",lineStyle:"Line style",lineList:"Lines",noLines:"No lines yet",needTwoBoxes:"Add at least two boxes before drawing a line.",boxRejected:"That name is empty or already taken by another box.",lineRejected:"That line already exists, or both ends are the same box.",toggleStyle:"Toggle line style",deleteLine:"Delete line",sectionSub:"Long flow, 4 layers per section"}
+  id:{title:"asuradraw",session:"SESI AKTIF",listening:"Mendengarkan",processing:"Memproses",initializing:"Menyiapkan mikrofon",denied:"Izin mikrofon ditolak",unavailable:"Pengenalan suara tidak tersedia",ended:"Sesi berakhir",placeholder:"Ketik perintah untuk menguji…",hint:"Ucapkan keputusan arsitektur dengan jelas",undo:"Urungkan",redo:"Ulangi",layout:"Tata otomatis",clear:"Bersihkan",end:"Akhiri sesi",empty:"Ucapan sementara akan muncul di sini",safe:"Tidak ada perubahan — kalimat bukan perintah eksplisit",applied:"Diterapkan",examples:"COBA UCAPKAN",examplesTyped:"CONTOH PERINTAH",confirmTitle:"Bersihkan seluruh diagram?",confirmBody:"Semua node dan koneksi akan dihapus. Anda masih dapat mengurungkannya.",cancel:"Batal",confirm:"Bersihkan",guide:"Panduan",voiceOff:"Sembunyikan mode suara",voiceOn:"Aktifkan mode suara",typeOnly:"Mode ketik",retry:"Coba lagi",nodes:"node",connections:"koneksi",ready:"Kanvas siap",readyHint:"Ucapkan \u201ctambahkan User\u201d untuk mulai",langLabel:"Bahasa pengenalan suara",deleteNode:"Hapus node",editNode:"Ubah nama",editHint:"Klik dua kali untuk mengubah nama, Delete untuk menghapus",dismiss:"Tutup",jumpToSec:"\u2794 Ke Seksi",jumpFromSec:"\u21a9 Dari Seksi",section:"Seksi",manual:"Editor manual",designs:"Desain tersimpan",designsTitle:"Desain tersimpan",designName:"Nama desain",save:"Simpan",openDesign:"Buka desain",deleteDesign:"Hapus desain",noDesigns:"Belum ada desain tersimpan.",saveEmpty:"Kanvas masih kosong — tidak ada yang bisa disimpan.",saveFailed:"Penyimpanan lokal tidak tersedia atau sudah penuh.",savedHint:"Desain disimpan di browser ini saja.",collapse:"Sembunyikan panel bawah",expand:"Tampilkan panel bawah",fullscreen:"Layar penuh",exitFullscreen:"Keluar dari layar penuh",manualTitle:"Editor manual",addBox:"Tambah box",boxLabel:"Nama box, misal Cache Miss",boxKind:"Jenis box",add:"Tambah",addLine:"Tambah garis",lineFrom:"Dari",lineTo:"Ke",solid:"Utuh",dashed:"Putus-putus",lineStyle:"Gaya garis",lineList:"Daftar garis",noLines:"Belum ada garis",needTwoBoxes:"Tambahkan minimal dua box sebelum menarik garis.",manualConnectHint:"Atau tarik titik kanan sebuah box ke titik kiri box tujuan.",boxRejected:"Nama itu kosong atau sudah dipakai box lain.",lineRejected:"Garis itu sudah ada, atau kedua ujungnya box yang sama.",toggleStyle:"Ubah gaya garis",deleteLine:"Hapus garis",sectionSub:"Alur panjang, 4 layer per seksi"},
+  en:{title:"asuradraw",session:"LIVE SESSION",listening:"Listening",processing:"Processing",initializing:"Preparing microphone",denied:"Microphone permission denied",unavailable:"Speech recognition unavailable",ended:"Session ended",placeholder:"Type a command to test…",hint:"State architecture decisions clearly",undo:"Undo",redo:"Redo",layout:"Auto layout",clear:"Clear",end:"End session",empty:"Interim speech will appear here",safe:"No change — not an explicit command",applied:"Applied",examples:"TRY SAYING",examplesTyped:"EXAMPLE COMMANDS",confirmTitle:"Clear the entire diagram?",confirmBody:"All nodes and connections will be removed. You can still undo this.",cancel:"Cancel",confirm:"Clear",guide:"Guide",voiceOff:"Hide voice mode",voiceOn:"Turn on voice mode",typeOnly:"Type-only mode",retry:"Try again",nodes:"nodes",connections:"connections",ready:"Canvas ready",readyHint:"Say \u201cadd User\u201d to begin",langLabel:"Speech recognition language",deleteNode:"Delete node",editNode:"Rename",editHint:"Double-click to rename, Delete to remove",dismiss:"Dismiss",jumpToSec:"\u2794 To Section",jumpFromSec:"\u21a9 From Section",section:"Section",manual:"Manual editor",designs:"Saved designs",designsTitle:"Saved designs",designName:"Design name",save:"Save",openDesign:"Open design",deleteDesign:"Delete design",noDesigns:"No saved designs yet.",saveEmpty:"The canvas is empty — there is nothing to save.",saveFailed:"Local storage is unavailable or full.",savedHint:"Designs are stored in this browser only.",collapse:"Hide bottom panel",expand:"Show bottom panel",fullscreen:"Full screen",exitFullscreen:"Exit full screen",manualTitle:"Manual editor",addBox:"Add box",boxLabel:"Box name, e.g. Cache Miss",boxKind:"Box kind",add:"Add",addLine:"Add line",lineFrom:"From",lineTo:"To",solid:"Solid",dashed:"Dashed",lineStyle:"Line style",lineList:"Lines",noLines:"No lines yet",needTwoBoxes:"Add at least two boxes before drawing a line.",manualConnectHint:"Or drag the right dot of one box to the left dot of the target box.",boxRejected:"That name is empty or already taken by another box.",lineRejected:"That line already exists, or both ends are the same box.",toggleStyle:"Toggle line style",deleteLine:"Delete line",sectionSub:"Long flow, 4 layers per section"}
 };
 
 const LangContext=createContext<"id"|"en">("id");
@@ -47,7 +47,7 @@ function SystemNode({id,data,selected}:NodeProps){
       jumpTo(String(data.bridgeTargetId));
     }
   };
-  return <div onDoubleClick={()=>setDraft(label)} onClick={draft===null&&data.bridgeTargetId?handleJump:undefined} title={draft===null?(data.bridgeTargetId?L.jumpToSec:L.editHint):undefined} className={"group relative min-w-[164px] rounded-2xl border bg-[#10201b] px-5 py-4 transition-all duration-300 "+(isHighlighted?"animate-pulse ring-2 ring-cyan-400 ":"")+(data.bridgeTargetId?"cursor-pointer hover:border-cyan-400 ":"")} style={{borderColor:isHighlighted?"#65d9e8":selected?color:isStart?"#22c55e":isEnd?"#ec4899":data.bridgeTargetId?"#44786d":"#30463d",boxShadow:isHighlighted?"0 0 0 4px #65d9e8, 0 0 35px rgba(101,217,232,.8)":isStart?"0 0 20px rgba(34,197,94,.25)":isEnd?"0 0 20px rgba(236,72,153,.25)":"0 12px 28px rgba(0,0,0,.32)"}}>
+  return <div onDoubleClick={()=>setDraft(label)} onClick={draft===null&&data.bridgeTargetId?handleJump:undefined} title={draft===null?(data.bridgeTargetId?L.jumpToSec:L.editHint):undefined} className={"group relative w-[240px] rounded-2xl border bg-[#10201b] px-5 py-4 transition-all duration-300 "+(isHighlighted?"animate-pulse ring-2 ring-cyan-400 ":"")+(data.bridgeTargetId?"cursor-pointer hover:border-cyan-400 ":"")} style={{borderColor:isHighlighted?"#65d9e8":selected?color:isStart?"#22c55e":isEnd?"#ec4899":data.bridgeTargetId?"#44786d":"#30463d",boxShadow:isHighlighted?"0 0 0 4px #65d9e8, 0 0 35px rgba(101,217,232,.8)":isStart?"0 0 20px rgba(34,197,94,.25)":isEnd?"0 0 20px rgba(236,72,153,.25)":"0 12px 28px rgba(0,0,0,.32)"}}>
     <Handle type="target" position={Position.Left} style={{background:color,border:0,width:8,height:8}}/>
     <div className="nodrag absolute -right-2 -top-2 flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
       <button type="button" onClick={()=>setDraft(label)} title={L.editNode} aria-label={L.editNode+": "+label} className="grid h-6 w-6 place-items-center rounded-full border border-[#33483f] bg-[#152b24] text-[#9bafa6] transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"><Pencil size={12}/></button>
@@ -97,7 +97,7 @@ function ContinuationNode({data}:NodeProps){
   const label=String(data.label||"");
   const kind=String(data.kind||"service");
   const color=kind==="client"?"#b7f774":kind==="edge"?"#65d9e8":kind==="app"?"#ffbd68":kind==="data"?"#ff9bc7":"#a990ff";
-  return <button type="button" onClick={()=>jumpTo(String(data.bridgeTargetId))} className="relative min-w-[164px] rounded-2xl border border-cyan-500/60 bg-[#10201b] px-5 py-4 text-left shadow-[0_0_24px_rgba(101,217,232,.16)] transition hover:border-cyan-300" title={L.jumpFromSec+" "+String(data.bridgeFromSec||1)}>
+  return <button type="button" onClick={()=>jumpTo(String(data.bridgeTargetId))} className="relative w-[240px] rounded-2xl border border-cyan-500/60 bg-[#10201b] px-5 py-4 text-left shadow-[0_0_24px_rgba(101,217,232,.16)] transition hover:border-cyan-300" title={L.jumpFromSec+" "+String(data.bridgeFromSec||1)}>
     <Handle type="target" position={Position.Left} style={{background:color,border:0,width:8,height:8}}/>
     <div className="mb-2 flex items-center justify-between gap-2">
       <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#71877d]">{kind}</span>
@@ -109,17 +109,21 @@ function ContinuationNode({data}:NodeProps){
 }
 
 const nodeTypes={system:SystemNode,continuation:ContinuationNode,sectionHeader:SectionHeaderNode};
+const NODE_WIDTH=240;
+const NODE_HEIGHT=82;
+const NOTE_NODE_HEIGHT=132;
+const nodeHeight=(node:Node)=>node.data.note?NOTE_NODE_HEIGHT:NODE_HEIGHT;
 
 function arrangeSectioned(nodes:Node[],edges:Edge[]){
   if(!nodes.length)return{arrangedNodes:[],extraNodes:[],rewiredEdges:edges};
-  const gAll=new dagre.graphlib.Graph();gAll.setDefaultEdgeLabel(()=>({}));gAll.setGraph({rankdir:"LR",ranksep:90,nodesep:60});
-  nodes.forEach(n=>gAll.setNode(n.id,{width:164,height:82}));edges.forEach(e=>gAll.setEdge(e.source,e.target));dagre.layout(gAll);
+  const gAll=new dagre.graphlib.Graph();gAll.setDefaultEdgeLabel(()=>({}));gAll.setGraph({rankdir:"LR",ranksep:120,nodesep:80});
+  nodes.forEach(n=>gAll.setNode(n.id,{width:NODE_WIDTH,height:nodeHeight(n)}));edges.forEach(e=>gAll.setEdge(e.source,e.target));dagre.layout(gAll);
   const xVals=Array.from(new Set(nodes.map(n=>Math.round(gAll.node(n.id).x)))).sort((a,b)=>a-b);
   // Keep ordinary diagrams together. Sectioning only becomes useful once an
   // eighth layer would make the single canvas difficult to scan.
   if(xVals.length<=7){
     return {
-      arrangedNodes:nodes.map(n=>({...n,type:"system",position:{x:gAll.node(n.id).x-82,y:gAll.node(n.id).y-41}})),
+      arrangedNodes:nodes.map(n=>({...n,type:"system",position:{x:gAll.node(n.id).x-NODE_WIDTH/2,y:gAll.node(n.id).y-nodeHeight(n)/2}})),
       extraNodes:[],
       rewiredEdges:edges
     };
@@ -160,13 +164,13 @@ function arrangeSectioned(nodes:Node[],edges:Edge[]){
   sectionNodes.forEach((originals,sectionIndex)=>{
     const bridges=bridgesBySection[sectionIndex];
     const all=[...bridges,...originals];
-    const graph=new dagre.graphlib.Graph();graph.setDefaultEdgeLabel(()=>({}));graph.setGraph({rankdir:"LR",ranksep:90,nodesep:60});
-    all.forEach(n=>graph.setNode(n.id,{width:164,height:82}));localEdges[sectionIndex].forEach(e=>graph.setEdge(e.source,e.target));dagre.layout(graph);
+    const graph=new dagre.graphlib.Graph();graph.setDefaultEdgeLabel(()=>({}));graph.setGraph({rankdir:"LR",ranksep:120,nodesep:80});
+    all.forEach(n=>graph.setNode(n.id,{width:NODE_WIDTH,height:nodeHeight(n)}));localEdges[sectionIndex].forEach(e=>graph.setEdge(e.source,e.target));dagre.layout(graph);
     let bottom=sectionTop+60;
     originals.forEach(n=>{
       const p=graph.node(n.id);
-      const placed={...n,position:{x:p.x-82,y:p.y-41+sectionTop+60}};
-      bottom=Math.max(bottom,placed.position.y+82);
+      const placed={...n,position:{x:p.x-NODE_WIDTH/2,y:p.y-nodeHeight(n)/2+sectionTop+60}};
+      bottom=Math.max(bottom,placed.position.y+nodeHeight(n));
       arrangedNodes.push(placed);
     });
     const boundary=bridges[0];
@@ -178,7 +182,7 @@ function arrangeSectioned(nodes:Node[],edges:Edge[]){
 }
 
 function Canvas({onLog}:{onLog:(l:Log)=>void}){
-  const {nodes,edges,onNodesChange,onEdgesChange,execute,undo,redo,clear,remove,past,future}=useDiagramStore();const flow=useReactFlow();
+  const {nodes,edges,onNodesChange,onEdgesChange,execute,undo,redo,clear,remove,link,past,future}=useDiagramStore();const flow=useReactFlow();
   const [lang,setLang]=useState<"id"|"en">("id");const [status,setStatus]=useState<Status>("ended");const [interim,setInterim]=useState("");const [typed,setTyped]=useState("");const [voice,setVoice]=useState(false);const [seconds,setSeconds]=useState(0);const speech=useRef<WebSpeechProvider|null>(null);const L=labels[lang];
   const isManualLayout=useRef(false);
   const [highlightedId,setHighlightedId]=useState<string|null>(null);
@@ -255,7 +259,7 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
       list.push({
         id:edge.source,
         type:"continuation",
-        position:{x:target.position.x-254,y:target.position.y},
+        position:{x:target.position.x-NODE_WIDTH-120,y:target.position.y},
         selectable:false,
         deletable:false,
         zIndex:2,
@@ -281,7 +285,7 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
   const jumpTo=useCallback((targetId:string)=>{
     const target=displayNodes.find(n=>n.id===targetId);
     if(target){
-      flow.setCenter(target.position.x+82,target.position.y+41,{duration:650,zoom:Math.max(flow.getZoom(),.95)});
+      flow.setCenter(target.position.x+NODE_WIDTH/2,target.position.y+nodeHeight(target)/2,{duration:650,zoom:Math.max(flow.getZoom(),.95)});
       setHighlightedId(targetId);
       window.setTimeout(()=>setHighlightedId(null),2200);
     }
@@ -332,6 +336,11 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
   // React Flow deletes selected elements itself; returning false hands the work to the
   // store instead, so a keyboard delete lands in the same undo history as a spoken one.
   const onBeforeDelete=useCallback(async ({nodes:n,edges:e}:{nodes:Node[];edges:Edge[]})=>{remove(n.map(x=>x.id),e.map(x=>x.id));return false},[remove]);
+  const onConnect=useCallback(({source,target}:Connection)=>{
+    if(!source||!target||!link(source,target,"solid"))return;
+    isManualLayout.current=true;
+    setExtras({extraNodes:[],rewiredEdges:[]});
+  },[link]);
   const layout=()=>{
     isManualLayout.current=false;
     const current=useDiagramStore.getState();
@@ -392,7 +401,7 @@ function Canvas({onLog}:{onLog:(l:Log)=>void}){
       <div className="flex items-center gap-2 sm:gap-4">{voice?<div className="hidden items-center gap-2 text-xs text-[#9bafa6] sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-primary"/>{L.session}<span className="font-mono text-[#dce9e2]">{time}</span></div>:<span className="hidden text-xs text-[#71877d] sm:inline">{L.typeOnly}</span>}<Link href="/panduan" className="flex h-9 items-center gap-1.5 rounded-lg border border-[#2a3d35] bg-[#10201b] px-2.5 text-xs text-[#9bafa6] transition hover:border-primary/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><LifeBuoy size={14}/><span className="hidden sm:inline">{L.guide}</span></Link><Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={L.langLabel} className={TRIGGER+" w-[52px] sm:w-[168px]"}><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent className={MENU}><SelectItem value="id">Bahasa Indonesia</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select></div>
     </header>
     <section className="relative min-h-0 flex-1">
-      <div className="canvas-grid absolute inset-0"><ReactFlow key={sectionLayoutKey} nodes={displayNodes} edges={displayEdges} onNodesChange={handleNodesChange} onEdgesChange={onEdgesChange} onBeforeDelete={onBeforeDelete} deleteKeyCode={["Delete","Backspace"]} nodeTypes={nodeTypes} fitView fitViewOptions={{padding:.25}} colorMode="dark"><Background color="transparent"/><Controls position="top-left"/>{!panel&&<MiniMap position="top-right" pannable zoomable nodeColor="#b7f774" maskColor="rgba(3,10,8,.75)"/>}</ReactFlow></div>
+      <div className="canvas-grid absolute inset-0"><ReactFlow key={sectionLayoutKey} nodes={displayNodes} edges={displayEdges} onNodesChange={handleNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onBeforeDelete={onBeforeDelete} deleteKeyCode={["Delete","Backspace"]} nodeTypes={nodeTypes} fitView fitViewOptions={{padding:.25}} colorMode="dark"><Background color="transparent"/><Controls position="top-left"/>{!panel&&<MiniMap position="top-right" pannable zoomable nodeColor="#b7f774" maskColor="rgba(3,10,8,.75)"/>}</ReactFlow></div>
       <div className="pointer-events-none absolute left-1/2 top-5 -translate-x-1/2 rounded-full border border-[#2b4037] bg-[#0d1916]/90 px-4 py-2 text-xs text-[#94a89f] shadow-lg">{nodes.length} {L.nodes} <span className="mx-2 text-[#3d5149]">•</span> {edges.length} {L.connections}</div>
       {panel==="manual"&&<ManualEditor onClose={()=>setPanel(null)}/>}
       {panel==="designs"&&<DesignLibrary onClose={()=>setPanel(null)} onOpened={adoptSavedLayout}/>}
@@ -472,6 +481,7 @@ function ManualEditor({onClose}:{onClose:()=>void}){
       </form>
       <form onSubmit={submitLine} className="mt-4 space-y-2 border-t border-[#203129] pt-4">
         <p className={SECTION_TITLE}>{L.addLine}</p>
+        <p className="text-xs leading-relaxed text-[#71877d]">{L.manualConnectHint}</p>
         {nodes.length<2?<p className="text-xs text-[#71877d]">{L.needTwoBoxes}</p>:<>
           <div className="flex items-center gap-2">
             <Select value={from} onValueChange={setFrom}><SelectTrigger aria-label={L.lineFrom} className={TRIGGER+" min-w-0 flex-1"}><SelectValue placeholder={L.lineFrom}/></SelectTrigger><SelectContent className={MENU}>{choices}</SelectContent></Select>
