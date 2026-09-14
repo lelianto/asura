@@ -40,7 +40,7 @@ export default function Guide(){
         <Link href="/" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#9bafa6] transition hover:bg-[#17251f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <ArrowLeft size={16}/><span className="hidden sm:inline">{G.back}</span>
         </Link>
-        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa panduan":"Guide language"} className="h-9 w-[52px] rounded-lg border-[#2a3d35] bg-[#10201b] px-2.5 text-xs text-[#dce9e2] sm:w-[168px]"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent className="border-[#2a3d35] bg-[#0d1916] text-[#dce9e2]"><SelectItem value="id">Bahasa Indonesia</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select>
+        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa panduan":"Guide language"} className="h-9 w-10 justify-center gap-0 rounded-lg border-[#2a3d35] bg-[#10201b] px-0 text-[11px] text-[#dce9e2] [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden sm:w-[156px] sm:justify-between sm:gap-2 sm:px-2.5 sm:[&>[data-slot=select-value]]:flex sm:[&>svg:last-child]:block"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent align="end" className="border-[#2a3d35] bg-[#0d1916] text-xs text-[#dce9e2]"><SelectItem className="text-xs" value="id">Bahasa Indonesia</SelectItem><SelectItem className="text-xs" value="en">English</SelectItem></SelectContent></Select>
       </div>
     </header>
 

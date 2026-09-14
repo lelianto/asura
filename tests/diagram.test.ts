@@ -85,3 +85,34 @@ test("disconnect is parseable", () => {
   assert.deepEqual(parseIntent("disconnect User from CDN"),
     [{ type: "DISCONNECT", from: "User", to: "CDN" }]);
 });
+
+test("compact typed shortcuts build chains and branches", () => {
+  assert.deepEqual(parseIntent("User>Browser>DNS>HTTPS/TLS>DNS>>Cache Hit|Cache Miss"), [
+    {type:"CONNECT",from:"User",to:"Browser"},
+    {type:"CONNECT",from:"Browser",to:"DNS"},
+    {type:"CONNECT",from:"DNS",to:"HTTPS/TLS"},
+    {type:"CONNECT",from:"HTTPS/TLS",to:"DNS"},
+    {type:"BRANCH",from:"DNS",targets:["Cache Hit","Cache Miss"]},
+  ]);
+  assert.deepEqual(parseIntent("BFF>>Redis|PostgreSQL"), [
+    {type:"BRANCH",from:"BFF",targets:["Redis","PostgreSQL"]},
+  ]);
+});
+
+test("typed shortcuts cover diagram editing commands", () => {
+  assert.deepEqual(parseIntent("+Redis"), [{type:"ADD_NODE",label:"Redis"}]);
+  assert.deepEqual(parseIntent("-Redis"), [{type:"DELETE_NODE",target:"Redis"}]);
+  assert.deepEqual(parseIntent("User!>CDN"), [{type:"DISCONNECT",from:"User",to:"CDN"}]);
+  assert.deepEqual(parseIntent("BFF:=Backend API"), [{type:"RENAME_NODE",target:"BFF",newLabel:"Backend API"}]);
+  assert.deepEqual(parseIntent("Frontend@Next.js"), [{type:"SET_TECH",target:"Frontend",tech:"Next.js"}]);
+  assert.deepEqual(parseIntent('Frontend::"Gunakan SSR > CSR"'), [{type:"SET_NOTE",target:"Frontend",note:"Gunakan SSR > CSR"}]);
+  assert.deepEqual(parseIntent(":undo"), [{type:"UNDO"}]);
+  assert.deepEqual(parseIntent(":redo"), [{type:"REDO"}]);
+  assert.deepEqual(parseIntent(":clear"), [{type:"CLEAR"}]);
+});
+
+test("quoted shortcut labels may contain structural punctuation", () => {
+  assert.deepEqual(parseIntent('"Worker > Queue">Gateway'), [
+    {type:"CONNECT",from:"Worker > Queue",to:"Gateway"},
+  ]);
+});

@@ -2,11 +2,12 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {ArrowLeft,ArrowRight,ArrowUp,Gauge,Languages,PenLine,Route,Sparkles,Target} from "lucide-react";
+import {ArrowLeft,ArrowRight,ArrowUp,BrainCircuit,ChevronDown,Code2,Gauge,Languages,Layers3,MapPin,PenLine,Route,Sparkles,Target} from "lucide-react";
 import {parseIntent} from "@/lib/diagram";
 import {useDiagramStore} from "@/lib/store";
 import {ACRONYMS,BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,PIPELINE,PIPELINE_SHORT,WEB_VITALS,WORKED_EXAMPLE,pipelineToStatements,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select";
+import {NEXT_PATTERNS,NEXT_QUICK_GROUPS} from "@/lib/nextjs-cheatsheet";
 
 const T={
   id:{back:"Kembali ke kanvas",title:"Cheatsheet FE System Design",
@@ -18,6 +19,10 @@ const T={
     pipelineLede:"Pertanyaan \u201ccoba ceritakan apa yang terjadi saat halaman dibuka\u201d menanyakan urutan ini. Setiap tahap punya satu hal yang bisa dioptimasi \u2014 itu yang membuat jawabannya terdengar terstruktur, bukan hafalan tool.",
     pipelineShort:"Hafalan super singkat",
     pipelineNodeHint:"Nama kotak di kanvas",
+    codeChip:"Kode App Router",code:"Next.js App Router: problem → code → letak",
+    codeLede:"Pakai ini setelah menentukan requirement dan trade-off. Pilih problem-nya, lihat bentuk kode minimum, lalu ingat boundary tempat kode itu hidup.",
+    codeScan:"Peta tanggung jawab",codeScanLede:"Tidak semua tahap perlu dicari “kode React”-nya. Hafalkan siapa yang mengerjakan apa.",
+    miniCode:"Mini code",place:"Letak",mental:"Mental model",open:"Buka detail",close:"Tutup detail",
     vitals:"Tiga titik performance",
     vitalsLede:"Hampir semua pertanyaan performance berujung ke salah satu dari tiga ini. Kaitkan ke tahap tempat masalahnya muncul.",
     flow:"Kerangka berpikir",flowLede:"Lima langkah ini urut. Trade-off selalu jadi penutup — bagian inilah yang paling menunjukkan seniority.",
@@ -37,6 +42,10 @@ const T={
     pipelineLede:"\u201cWalk me through what happens when the page loads\u201d is a question about this order. Every stage has one thing worth optimising \u2014 that is what makes an answer sound structured rather than memorised.",
     pipelineShort:"The short version",
     pipelineNodeHint:"Box name on the canvas",
+    codeChip:"App Router code",code:"Next.js App Router: problem → code → location",
+    codeLede:"Use this after choosing the requirement and trade-off. Start with the problem, recognize the smallest useful code shape, then remember the boundary where it belongs.",
+    codeScan:"Responsibility map",codeScanLede:"Not every stage needs a “React code” answer. Memorise which layer does what.",
+    miniCode:"Mini code",place:"Location",mental:"Mental model",open:"Open details",close:"Close details",
     vitals:"Three performance points",
     vitalsLede:"Almost every performance question lands on one of these three. Tie each one to the stage where it goes wrong.",
     flow:"The thinking framework",flowLede:"These five steps are ordered. Trade-off always closes — that is the part that shows seniority.",
@@ -69,7 +78,8 @@ function DrawButton({onClick,active,label,className=""}:{onClick:()=>void;active
 
 // Which bucket section is under the sticky nav right now, so the matching chip
 // can light up and scroll itself into view on narrow screens.
-const NAV_KEYS=["pipeline",...BUCKETS.map(b=>b.key)];
+// Keep this in DOM order; the last section above the sticky line wins.
+const NAV_KEYS=["next-code","pipeline",...BUCKETS.map(b=>b.key)];
 
 function useActiveBucket(){
   const [active,setActive]=useState("");
@@ -124,7 +134,7 @@ export default function Cheatsheet(){
       <div className="mx-auto flex h-14 max-w-[980px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
         <Link href="/" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#9bafa6] transition hover:bg-[#17251f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <ArrowLeft size={16}/><span className="hidden sm:inline">{L.back}</span></Link>
-        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa halaman":"Page language"} className="h-9 w-[52px] rounded-lg border-[#2a3d35] bg-[#10201b] px-2.5 text-xs text-[#dce9e2] sm:w-[168px]"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent className="border-[#2a3d35] bg-[#0d1916] text-[#dce9e2]"><SelectItem value="id">Bahasa Indonesia</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select>
+        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa halaman":"Page language"} className="h-9 w-10 justify-center gap-0 rounded-lg border-[#2a3d35] bg-[#10201b] px-0 text-[11px] text-[#dce9e2] [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden sm:w-[156px] sm:justify-between sm:gap-2 sm:px-2.5 sm:[&>[data-slot=select-value]]:flex sm:[&>svg:last-child]:block"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent align="end" className="border-[#2a3d35] bg-[#0d1916] text-xs text-[#dce9e2]"><SelectItem className="text-xs" value="id">Bahasa Indonesia</SelectItem><SelectItem className="text-xs" value="en">English</SelectItem></SelectContent></Select>
       </div>
     </header>
 
@@ -135,6 +145,10 @@ export default function Cheatsheet(){
             aria-current={active==="pipeline"?"true":undefined}
             className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active==="pipeline"?"border-primary bg-primary text-primary-foreground":"border-primary/45 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20")}>
             <Route size={13}/>{L.pipelineChip}<span className={active==="pipeline"?"text-primary-foreground/70":"text-primary/60"}>{PIPELINE.length}</span></a>
+          <a href="#next-code" ref={el=>{chips.current["next-code"]=el}}
+            aria-current={active==="next-code"?"true":undefined}
+            className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active==="next-code"?"border-primary bg-primary text-primary-foreground":"border-primary/45 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20")}>
+            <Code2 size={13}/>{L.codeChip}<span className={active==="next-code"?"text-primary-foreground/70":"text-primary/60"}>{NEXT_PATTERNS.length}</span></a>
           <span aria-hidden="true" className="my-1 w-px shrink-0 bg-[#25382f]"/>
           {BUCKETS.map(b=><a key={b.key} href={"#"+b.key} ref={el=>{chips.current[b.key]=el}}
             aria-current={active===b.key?"true":undefined}
@@ -149,6 +163,50 @@ export default function Cheatsheet(){
         <div className="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground"><Target size={20}/></div>
         <h1 className="text-[27px] font-semibold leading-[1.12] tracking-tight text-[#eef7f2] sm:text-[34px] lg:text-[40px]">{L.title}</h1>
         <p className="mt-3 max-w-[58ch] text-[14px] leading-relaxed text-[#9db0a7] sm:text-[15px]">{L.tagline}</p>
+      </section>
+
+      <section id="next-code" className={ANCHOR+" border-b border-[#1e2e27] py-9 sm:py-11"}>
+        <div className="mb-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#e6f1eb]"><Code2 size={17} className="text-primary"/>{L.code}</h2>
+          <p className="mt-1.5 max-w-[68ch] text-sm leading-relaxed text-[#8fa49b]">{L.codeLede}</p>
+        </div>
+
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {NEXT_PATTERNS.map((pattern,i)=><details key={pattern.key} className="group min-w-0 max-w-full rounded-xl border border-[#25382f] bg-[#0c1815] open:border-primary/35 sm:first:col-span-2 sm:[&:nth-child(2)]:col-span-2">
+            <summary className="flex min-h-[64px] cursor-pointer list-none items-start gap-3 rounded-xl px-3.5 py-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden sm:px-4">
+              <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-[11px] font-semibold text-primary">{String(i+1).padStart(2,"0")}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold leading-snug text-[#e6f1eb]">{pattern.need[lang]}</span>
+                <code className="mt-1 block truncate text-[11.5px] text-[#7f978b]">{pattern.code.split("\n")[0]}</code>
+              </span>
+              <ChevronDown size={16} aria-hidden="true" className="mt-1 shrink-0 text-[#64796f] transition-transform group-open:rotate-180"/>
+            </summary>
+            <div className="border-t border-[#1e2e27] px-3.5 pb-4 pt-3.5 sm:px-4">
+              <div className="grid gap-3">
+                <div>
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[.13em] text-[#61766c]">{L.miniCode}</p>
+                  <pre className="overflow-x-auto rounded-lg border border-[#21332b] bg-[#07100e] p-3 text-[12px] leading-relaxed text-[#cfe0d6] [tab-size:2]"><code>{pattern.code}</code></pre>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="flex items-start gap-2 rounded-lg bg-[#0f1c18] px-3 py-2.5"><MapPin size={13} className="mt-0.5 shrink-0 text-[#8ab4ff]"/><span className="text-[12.5px] leading-relaxed text-[#9db0a7]"><b className="font-semibold text-[#c9d9d1]">{L.place}:</b> {pattern.place[lang]}</span></div>
+                  <div className="flex items-start gap-2 rounded-lg bg-[#0f1c18] px-3 py-2.5"><BrainCircuit size={13} className="mt-0.5 shrink-0 text-[#ff8f6b]"/><span className="text-[12.5px] leading-relaxed text-[#9db0a7]"><b className="font-semibold text-[#c9d9d1]">{L.mental}:</b> {pattern.model[lang]}</span></div>
+                </div>
+                {pattern.note&&<p className="border-l-2 border-primary/35 pl-3 text-[12.5px] leading-relaxed text-[#81988d]">{pattern.note[lang]}</p>}
+              </div>
+            </div>
+          </details>)}
+        </div>
+
+        <div className="mt-7 rounded-2xl border border-[#25382f] bg-[#0a1512] p-4 sm:p-5">
+          <h3 className="flex items-center gap-2 text-[15px] font-semibold text-[#e6f1eb]"><Layers3 size={15} className="text-[#8ab4ff]"/>{L.codeScan}</h3>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-[#8fa49b]">{L.codeScanLede}</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {NEXT_QUICK_GROUPS.map(group=><div key={group.title.en} className="rounded-xl border border-[#21332b] bg-[#0c1815] p-3.5">
+              <h4 className="text-[12px] font-semibold uppercase tracking-[.11em] text-primary">{group.title[lang]}</h4>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-[#9db0a7]">{group.items.join(" → ")}</p>
+            </div>)}
+          </div>
+        </div>
       </section>
 
       <section className="border-b border-[#1e2e27] py-9 sm:py-11">

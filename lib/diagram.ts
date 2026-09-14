@@ -309,6 +309,8 @@ function term(raw:string):Term{
 // when a capital follows it, because dictation spells the name out as "next. js" too.
 export function parseIntent(raw:string):DiagramCommand[]{
   return raw.split(/[.!?;]+\s+(?=[A-Z])|\n+/).flatMap(sentence=>{
+    const shortcut=parseShortcut(sentence.trim());
+    if(shortcut)return guard(shortcut);
     // Keep quoted note prose byte-for-byte. Normal vocabulary replacement is useful
     // for node names, but it must not rewrite "compression" to "Compression" inside
     // a user's annotation before the note grammar gets a chance to capture it.
@@ -316,6 +318,82 @@ export function parseIntent(raw:string):DiagramCommand[]{
     const text=isNote?sentence.trim().replace(/[.!?]+$/g,""):normalize(sentence);
     return text?splitClauses(text).flatMap(c=>guard(parseClause(c))):[];
   });
+}
+
+// Compact typed commands. Unlike the speech grammar these deliberately accept operators
+// without surrounding whitespace: `User>Browser>DNS>>Hit|Miss`. Operators inside quoted
+// labels are data, and a line that does not completely match this grammar falls through to
+// the natural-language parser.
+function splitShortcut(raw:string,operator:string):string[]{
+  const parts:string[]=[];let start=0;let quoted=false;let escaped=false;
+  for(let i=0;i<raw.length;i++){
+    const char=raw[i];
+    if(escaped){escaped=false;continue}
+    if(char==="\\"&&quoted){escaped=true;continue}
+    if(char==='"'){quoted=!quoted;continue}
+    if(!quoted&&raw.startsWith(operator,i)){
+      parts.push(raw.slice(start,i));start=i+operator.length;i+=operator.length-1;
+    }
+  }
+  parts.push(raw.slice(start));
+  return quoted?[]:parts;
+}
+
+function shortcutLabel(raw:string):string{
+  const value=raw.trim();
+  if(!value)return"";
+  if(value.startsWith('"')||value.endsWith('"')){
+    if(value.length<2||!value.startsWith('"')||!value.endsWith('"'))return"";
+    return value.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\").trim();
+  }
+  // Structural operators are only legal inside a quoted label.
+  if(/[>|@]/.test(value)||value.includes(":=")||value.includes("::")||value.includes("!>"))return"";
+  return clean(value);
+}
+
+function parseShortcut(raw:string):DiagramCommand[]|null{
+  const text=raw.trim();
+  if(!text)return null;
+  if(/^:(?:undo|redo|clear)$/i.test(text)){
+    const type=text.slice(1).toUpperCase() as "UNDO"|"REDO"|"CLEAR";
+    return[{type}];
+  }
+  if(text.startsWith("+")||text.startsWith("-")){
+    const label=shortcutLabel(text.slice(1));
+    if(!label)return null;
+    return text[0]==="+"?[{type:"ADD_NODE",label}]:[{type:"DELETE_NODE",target:label}];
+  }
+  for(const [operator,type] of [["!>","DISCONNECT"],[":=","RENAME_NODE"],["@","SET_TECH"]] as const){
+    const parts=splitShortcut(text,operator);
+    if(parts.length!==2)continue;
+    const left=shortcutLabel(parts[0]),right=shortcutLabel(parts[1]);
+    if(!left||!right)return null;
+    if(type==="DISCONNECT")return[{type,from:left,to:right}];
+    if(type==="RENAME_NODE")return[{type,target:left,newLabel:right}];
+    return[{type,target:left,tech:right}];
+  }
+  const noteParts=splitShortcut(text,"::");
+  if(noteParts.length===2){
+    const target=shortcutLabel(noteParts[0]);
+    const noteRaw=noteParts[1].trim();
+    if(!target||noteRaw.length<2||!noteRaw.startsWith('"')||!noteRaw.endsWith('"'))return null;
+    return[{type:"SET_NOTE",target,note:noteRaw.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\")}];
+  }
+
+  const branches=splitShortcut(text,">>");
+  if(branches.length>2)return null;
+  const chainParts=splitShortcut(branches[0],">");
+  if(chainParts.length<2&&branches.length===1)return null;
+  const chainLabels=chainParts.map(shortcutLabel);
+  if(chainLabels.some(label=>!label))return null;
+  const commands:DiagramCommand[]=chainLabels.slice(0,-1).map((from,index)=>({type:"CONNECT",from,to:chainLabels[index+1]}));
+  if(branches.length===2){
+    const targets=splitShortcut(branches[1],"|").map(shortcutLabel);
+    const from=chainLabels.at(-1)||shortcutLabel(branches[0]);
+    if(!from||targets.length<2||targets.some(label=>!label))return null;
+    commands.push({type:"BRANCH",from,targets});
+  }
+  return commands.length?commands:null;
 }
 
 // The microphone is always on, so ordinary conversation reaches the parser too.
