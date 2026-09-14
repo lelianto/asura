@@ -36,3 +36,33 @@ export const NEXT_QUICK_GROUPS: { title: Localized; items: string[] }[] = [
   { title:{id:"Optimasi kode",en:"Code optimization"}, items:["Lazy loading", "Image", "Font", "Debounce", "Retry", "Virtualization", "Web Vitals"] },
   { title:{id:"Security",en:"Security"}, items:["CSP", "Secure cookie", "CSRF / server validation"] },
 ];
+
+export type Tradeoff = {
+  area: Localized;
+  left: string;
+  right: string;
+  tension: Localized;
+};
+
+export const TRADEOFFS: Tradeoff[] = [
+  {area:{id:"Rendering",en:"Rendering"},left:"SSG",right:"SSR",tension:{id:"Kecepatan dan mudah di-cache vs data segar dan personal",en:"Speed and cacheability vs fresh, personalized data"}},
+  {area:{id:"Rendering",en:"Rendering"},left:"SSG",right:"ISR",tension:{id:"Kesederhanaan statis vs pembaruan berkala",en:"Static simplicity vs periodic freshness"}},
+  {area:{id:"Rendering",en:"Rendering"},left:"SSR",right:"CSR",tension:{id:"HTML awal dan SEO vs interaksi yang berpusat di client",en:"Initial HTML and SEO vs client-led interactivity"}},
+  {area:{id:"Komponen",en:"Components"},left:"RSC",right:"Client Component",tension:{id:"JS dan hydration lebih sedikit vs interaktivitas",en:"Less JS and hydration vs interactivity"}},
+  {area:{id:"Data fetching",en:"Data fetching"},left:"Parallel",right:"Sequential",tension:{id:"Lebih cepat vs menjaga dependensi antar-request",en:"Speed vs handling request dependencies"}},
+  {area:{id:"Response",en:"Response"},left:"Streaming",right:"Wait all",tension:{id:"UI awal lebih cepat vs implementasi lebih sederhana",en:"Faster initial UI vs simpler implementation"}},
+  {area:{id:"Caching",en:"Caching"},left:"Cache",right:"Fresh data",tension:{id:"Performa dan skalabilitas vs freshness",en:"Performance and scalability vs freshness"}},
+  {area:{id:"CDN",en:"CDN"},left:"Cache hit",right:"Origin request",tension:{id:"Respons cepat vs response paling baru",en:"Fast response vs latest response"}},
+  {area:{id:"JavaScript",en:"JavaScript"},left:"Code splitting",right:"Single bundle",tension:{id:"JS awal lebih kecil vs lebih sedikit chunk/request",en:"Smaller initial JS vs fewer chunks and requests"}},
+  {area:{id:"Loading",en:"Loading"},left:"Lazy",right:"Eager",tension:{id:"Load awal cepat vs langsung tersedia",en:"Fast initial load vs immediate availability"}},
+  {area:{id:"Prefetch",en:"Prefetch"},left:"Prefetch",right:"On-demand",tension:{id:"Navigasi cepat vs hemat bandwidth",en:"Fast navigation vs lower bandwidth use"}},
+  {area:{id:"Hydration",en:"Hydration"},left:"Less client JS",right:"More client JS",tension:{id:"Performa vs interaktivitas",en:"Performance vs interactivity"}},
+  {area:{id:"List besar",en:"Large lists"},left:"Virtualization",right:"Render all",tension:{id:"Render lebih ringan vs kompleksitas tambahan",en:"Faster rendering vs added complexity"}},
+  {area:{id:"Search",en:"Search"},left:"Debounce",right:"Immediate",tension:{id:"Request lebih sedikit vs respons tertunda",en:"Fewer requests vs delayed response"}},
+  {area:{id:"Mutation",en:"Mutation"},left:"Optimistic",right:"Wait server",tension:{id:"UX terasa cepat vs rollback lebih rumit",en:"Fast-feeling UX vs rollback complexity"}},
+  {area:{id:"Failure",en:"Failure"},left:"Retry",right:"Fail fast",tension:{id:"Peluang pulih vs tambahan latency dan load",en:"Recovery chance vs extra latency and load"}},
+  {area:{id:"Failure",en:"Failure"},left:"Stale cache",right:"Fresh fetch",tension:{id:"Availability vs freshness",en:"Availability vs freshness"}},
+  {area:{id:"Gambar",en:"Images"},left:"Quality",right:"Small size",tension:{id:"Kualitas visual vs LCP dan bandwidth",en:"Visual quality vs LCP and bandwidth"}},
+  {area:{id:"Security",en:"Security"},left:"Strict CSP",right:"Flexible CSP",tension:{id:"Perlindungan lebih kuat vs fleksibilitas pihak ketiga",en:"Stronger protection vs third-party flexibility"}},
+  {area:{id:"Observability",en:"Observability"},left:"More monitoring",right:"Less monitoring",tension:{id:"Visibilitas masalah vs overhead dan biaya",en:"Issue visibility vs overhead and cost"}},
+];

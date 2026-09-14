@@ -2,12 +2,12 @@
 import {useCallback,useEffect,useRef,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {ArrowLeft,ArrowRight,ArrowUp,BrainCircuit,ChevronDown,Code2,Gauge,Languages,Layers3,MapPin,PenLine,Route,Sparkles,Target} from "lucide-react";
+import {ArrowLeft,ArrowRight,ArrowUp,BrainCircuit,ChevronDown,Code2,Gauge,GitCompareArrows,Languages,Layers3,MapPin,PenLine,Route,Sparkles,Target} from "lucide-react";
 import {parseIntent} from "@/lib/diagram";
 import {useDiagramStore} from "@/lib/store";
 import {ACRONYMS,BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,PIPELINE,PIPELINE_SHORT,WEB_VITALS,WORKED_EXAMPLE,pipelineToStatements,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select";
-import {NEXT_PATTERNS,NEXT_QUICK_GROUPS} from "@/lib/nextjs-cheatsheet";
+import {NEXT_PATTERNS,NEXT_QUICK_GROUPS,TRADEOFFS} from "@/lib/nextjs-cheatsheet";
 
 const T={
   id:{back:"Kembali ke kanvas",title:"Cheatsheet FE System Design",
@@ -23,6 +23,9 @@ const T={
     codeLede:"Pakai ini setelah menentukan requirement dan trade-off. Pilih problem-nya, lihat bentuk kode minimum, lalu ingat boundary tempat kode itu hidup.",
     codeScan:"Peta tanggung jawab",codeScanLede:"Tidak semua tahap perlu dicari “kode React”-nya. Hafalkan siapa yang mengerjakan apa.",
     miniCode:"Mini code",place:"Letak",mental:"Mental model",open:"Buka detail",close:"Tutup detail",
+    tradeoffChip:"Trade-off",tradeoffs:"Trade-off yang perlu bisa dijelaskan",
+    tradeoffsLede:"Tidak ada pilihan yang selalu menang. Sebutkan apa yang didapat, apa yang dikorbankan, lalu kaitkan keputusan ke requirement.",
+    versus:"dibanding",tradeoffClose:"Penutup interview: “Saya memilih A karena requirement X; konsekuensinya Y, dan saya akan mengevaluasi ulang saat Z.”",
     vitals:"Tiga titik performance",
     vitalsLede:"Hampir semua pertanyaan performance berujung ke salah satu dari tiga ini. Kaitkan ke tahap tempat masalahnya muncul.",
     flow:"Kerangka berpikir",flowLede:"Lima langkah ini urut. Trade-off selalu jadi penutup — bagian inilah yang paling menunjukkan seniority.",
@@ -46,6 +49,9 @@ const T={
     codeLede:"Use this after choosing the requirement and trade-off. Start with the problem, recognize the smallest useful code shape, then remember the boundary where it belongs.",
     codeScan:"Responsibility map",codeScanLede:"Not every stage needs a “React code” answer. Memorise which layer does what.",
     miniCode:"Mini code",place:"Location",mental:"Mental model",open:"Open details",close:"Close details",
+    tradeoffChip:"Trade-offs",tradeoffs:"Trade-offs you should be able to explain",
+    tradeoffsLede:"No option always wins. State what you gain, what you give up, then tie the decision back to the requirement.",
+    versus:"versus",tradeoffClose:"Interview close: “I chose A because of requirement X; the cost is Y, and I would revisit it when Z changes.”",
     vitals:"Three performance points",
     vitalsLede:"Almost every performance question lands on one of these three. Tie each one to the stage where it goes wrong.",
     flow:"The thinking framework",flowLede:"These five steps are ordered. Trade-off always closes — that is the part that shows seniority.",
@@ -79,7 +85,7 @@ function DrawButton({onClick,active,label,className=""}:{onClick:()=>void;active
 // Which bucket section is under the sticky nav right now, so the matching chip
 // can light up and scroll itself into view on narrow screens.
 // Keep this in DOM order; the last section above the sticky line wins.
-const NAV_KEYS=["next-code","pipeline",...BUCKETS.map(b=>b.key)];
+const NAV_KEYS=["next-code","tradeoffs","pipeline",...BUCKETS.map(b=>b.key)];
 
 function useActiveBucket(){
   const [active,setActive]=useState("");
@@ -134,7 +140,7 @@ export default function Cheatsheet(){
       <div className="mx-auto flex h-14 max-w-[980px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
         <Link href="/" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#9bafa6] transition hover:bg-[#17251f] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
           <ArrowLeft size={16}/><span className="hidden sm:inline">{L.back}</span></Link>
-        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa halaman":"Page language"} className="h-9 w-10 justify-center gap-0 rounded-lg border-[#2a3d35] bg-[#10201b] px-0 text-[11px] text-[#dce9e2] [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden sm:w-[156px] sm:justify-between sm:gap-2 sm:px-2.5 sm:[&>[data-slot=select-value]]:flex sm:[&>svg:last-child]:block"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue/></SelectTrigger><SelectContent align="end" className="border-[#2a3d35] bg-[#0d1916] text-xs text-[#dce9e2]"><SelectItem className="text-xs" value="id">Bahasa Indonesia</SelectItem><SelectItem className="text-xs" value="en">English</SelectItem></SelectContent></Select>
+        <Select value={lang} onValueChange={v=>setLang(v as "id"|"en")}><SelectTrigger aria-label={lang==="id"?"Bahasa halaman":"Page language"} className="h-9 w-10 justify-center gap-0 rounded-lg border-[#2a3d35] bg-[#10201b] px-0 text-[#dce9e2] [&>[data-slot=select-value]]:hidden [&>svg:last-child]:hidden sm:w-[156px] sm:justify-between sm:gap-2 sm:px-2.5 sm:[&>[data-slot=select-value]]:flex sm:[&>svg:last-child]:block"><Languages size={14} className="shrink-0 text-[#71877d]"/><SelectValue className="text-[11px] leading-none"/></SelectTrigger><SelectContent align="end" className="border-[#2a3d35] bg-[#0d1916] text-xs text-[#dce9e2]"><SelectItem className="text-xs" value="id">Bahasa Indonesia</SelectItem><SelectItem className="text-xs" value="en">English</SelectItem></SelectContent></Select>
       </div>
     </header>
 
@@ -149,6 +155,10 @@ export default function Cheatsheet(){
             aria-current={active==="next-code"?"true":undefined}
             className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active==="next-code"?"border-primary bg-primary text-primary-foreground":"border-primary/45 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20")}>
             <Code2 size={13}/>{L.codeChip}<span className={active==="next-code"?"text-primary-foreground/70":"text-primary/60"}>{NEXT_PATTERNS.length}</span></a>
+          <a href="#tradeoffs" ref={el=>{chips.current.tradeoffs=el}}
+            aria-current={active==="tradeoffs"?"true":undefined}
+            className={"inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary "+(active==="tradeoffs"?"border-[#ff8f6b] bg-[#ff8f6b] text-[#24110b]":"border-[#ff8f6b]/45 bg-[#ff8f6b]/10 text-[#ffad91] hover:border-[#ff8f6b] hover:bg-[#ff8f6b]/15")}>
+            <GitCompareArrows size={13}/>{L.tradeoffChip}<span className={active==="tradeoffs"?"text-[#24110b]/65":"text-[#ffad91]/60"}>{TRADEOFFS.length}</span></a>
           <span aria-hidden="true" className="my-1 w-px shrink-0 bg-[#25382f]"/>
           {BUCKETS.map(b=><a key={b.key} href={"#"+b.key} ref={el=>{chips.current[b.key]=el}}
             aria-current={active===b.key?"true":undefined}
@@ -207,6 +217,30 @@ export default function Cheatsheet(){
             </div>)}
           </div>
         </div>
+      </section>
+
+      <section id="tradeoffs" className={ANCHOR+" border-b border-[#1e2e27] py-9 sm:py-11"}>
+        <div className="mb-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#e6f1eb]"><GitCompareArrows size={17} className="text-[#ff8f6b]"/>{L.tradeoffs}</h2>
+          <p className="mt-1.5 max-w-[68ch] text-sm leading-relaxed text-[#8fa49b]">{L.tradeoffsLede}</p>
+        </div>
+
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {TRADEOFFS.map((item,i)=><article key={`${item.area.en}-${item.left}-${item.right}`} className="min-w-0 rounded-xl border border-[#25382f] bg-[#0c1815] p-3.5 sm:p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10px] font-semibold uppercase tracking-[.13em] text-[#6f857a]">{item.area[lang]}</span>
+              <span className="text-[10px] tabular-nums text-[#53685e]">{String(i+1).padStart(2,"0")}</span>
+            </div>
+            <div className="mt-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+              <span className="min-w-0 rounded-lg border border-primary/25 bg-primary/8 px-2.5 py-2 text-center text-[12.5px] font-semibold leading-snug text-[#dff2d4]">{item.left}</span>
+              <GitCompareArrows size={13} className="shrink-0 text-[#52675d]" aria-label={L.versus}/>
+              <span className="min-w-0 rounded-lg border border-[#ff8f6b]/25 bg-[#ff8f6b]/7 px-2.5 py-2 text-center text-[12.5px] font-semibold leading-snug text-[#f3d2c7]">{item.right}</span>
+            </div>
+            <p className="mt-3 border-t border-[#1e2e27] pt-2.5 text-[12.5px] leading-relaxed text-[#94a89e]">{item.tension[lang]}</p>
+          </article>)}
+        </div>
+
+        <p className="mt-5 rounded-xl border border-[#ff8f6b]/25 bg-[#160f0d] px-4 py-3 text-[13px] leading-relaxed text-[#d7b9af]">{L.tradeoffClose}</p>
       </section>
 
       <section className="border-b border-[#1e2e27] py-9 sm:py-11">
