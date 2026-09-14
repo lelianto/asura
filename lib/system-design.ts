@@ -20,9 +20,51 @@ export const BUCKETS: { key: Bucket; id: string; en: string }[] = [
   { key: "compatibility",   id: "Compatibility",   en: "Compatibility" },
 ];
 
+// Every abbreviation shown in the cheatsheet is expanded here. Keep this list
+// visible in the UI rather than relying on hover-only tooltips, which do not
+// help readers on touch devices.
+export const ACRONYMS: { short: string; long: string }[] = [
+  { short: "API", long: "Application Programming Interface" },
+  { short: "ARIA", long: "Accessible Rich Internet Applications" },
+  { short: "BFF", long: "Backend for Frontend" },
+  { short: "CDN", long: "Content Delivery Network" },
+  { short: "CI/CD", long: "Continuous Integration / Continuous Delivery" },
+  { short: "CLS", long: "Cumulative Layout Shift" },
+  { short: "CSP", long: "Content Security Policy" },
+  { short: "CSR", long: "Client-Side Rendering" },
+  { short: "CSRF", long: "Cross-Site Request Forgery" },
+  { short: "CSS", long: "Cascading Style Sheets" },
+  { short: "CSSOM", long: "CSS Object Model" },
+  { short: "DNS", long: "Domain Name System" },
+  { short: "DOM", long: "Document Object Model" },
+  { short: "E2E", long: "End-to-End" },
+  { short: "FE", long: "Front End" },
+  { short: "HTML", long: "HyperText Markup Language" },
+  { short: "HTTPS", long: "HyperText Transfer Protocol Secure" },
+  { short: "i18n", long: "Internationalization" },
+  { short: "INP", long: "Interaction to Next Paint" },
+  { short: "ISR", long: "Incremental Static Regeneration" },
+  { short: "JS", long: "JavaScript" },
+  { short: "LCP", long: "Largest Contentful Paint" },
+  { short: "RBAC", long: "Role-Based Access Control" },
+  { short: "RUM", long: "Real User Monitoring" },
+  { short: "SEO", long: "Search Engine Optimization" },
+  { short: "SSE", long: "Server-Sent Events" },
+  { short: "SSG", long: "Static Site Generation" },
+  { short: "SSR", long: "Server-Side Rendering" },
+  { short: "SWR", long: "Stale-While-Revalidate" },
+  { short: "TLS", long: "Transport Layer Security" },
+  { short: "UI", long: "User Interface" },
+  { short: "URL", long: "Uniform Resource Locator" },
+  { short: "WCAG", long: "Web Content Accessibility Guidelines" },
+  { short: "XSS", long: "Cross-Site Scripting" },
+];
+
 // Requirement → Design → Trade-off, as five steps with the questions to ask.
 export const MENTAL_MODEL: { step: number; id: string; en: string; asks: { id: string; en: string }[] }[] = [
   { step: 1, id: "Requirements", en: "Requirements", asks: [
+    { id: "Functional requirement apa?", en: "What are the functional requirements?" },
+    { id: "Non-functional requirement apa?", en: "What are the non-functional requirements?" },
     { id: "User siapa?", en: "Who are the users?" },
     { id: "Flow utama apa?", en: "What is the main flow?" },
     { id: "Scale berapa?", en: "What scale?" },

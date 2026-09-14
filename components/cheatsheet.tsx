@@ -5,13 +5,14 @@ import {useRouter} from "next/navigation";
 import {ArrowLeft,ArrowRight,ArrowUp,Gauge,Languages,PenLine,Route,Sparkles,Target} from "lucide-react";
 import {parseIntent} from "@/lib/diagram";
 import {useDiagramStore} from "@/lib/store";
-import {BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,PIPELINE,PIPELINE_SHORT,WEB_VITALS,WORKED_EXAMPLE,pipelineToStatements,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
+import {ACRONYMS,BUCKETS,CHEATSHEET,MEMORISE,MENTAL_MODEL,PAIRS,PIPELINE,PIPELINE_SHORT,WEB_VITALS,WORKED_EXAMPLE,pipelineToStatements,rowToStatement,type Bucket,type Row} from "@/lib/system-design";
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "@/components/ui/select";
 
 const T={
   id:{back:"Kembali ke kanvas",title:"Cheatsheet FE System Design",
     tagline:"Jangan hafalkan teknologi. Hafalkan kerangka berpikir dan hubungan problem → solusi.",
     jump:"Lompat ke bagian",top:"Kembali ke atas",
+    glossary:"Kepanjangan singkatan",glossaryLede:"Referensi singkat untuk semua singkatan yang digunakan di halaman ini.",
     pipelineChip:"Alur Next.js",
     pipeline:"Alur Next.js: dari URL sampai interaktif",
     pipelineLede:"Pertanyaan \u201ccoba ceritakan apa yang terjadi saat halaman dibuka\u201d menanyakan urutan ini. Setiap tahap punya satu hal yang bisa dioptimasi \u2014 itu yang membuat jawabannya terdengar terstruktur, bukan hafalan tool.",
@@ -30,6 +31,7 @@ const T={
   en:{back:"Back to canvas",title:"FE System Design Cheatsheet",
     tagline:"Do not memorise technologies. Memorise the thinking framework and the problem → solution link.",
     jump:"Jump to a section",top:"Back to top",
+    glossary:"Abbreviation glossary",glossaryLede:"A quick reference for every abbreviation used on this page.",
     pipelineChip:"Next.js flow",
     pipeline:"The Next.js flow: from URL to interactive",
     pipelineLede:"\u201cWalk me through what happens when the page loads\u201d is a question about this order. Every stage has one thing worth optimising \u2014 that is what makes an answer sound structured rather than memorised.",
@@ -147,6 +149,17 @@ export default function Cheatsheet(){
         <div className="mb-5 grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground"><Target size={20}/></div>
         <h1 className="text-[27px] font-semibold leading-[1.12] tracking-tight text-[#eef7f2] sm:text-[34px] lg:text-[40px]">{L.title}</h1>
         <p className="mt-3 max-w-[58ch] text-[14px] leading-relaxed text-[#9db0a7] sm:text-[15px]">{L.tagline}</p>
+      </section>
+
+      <section className="border-b border-[#1e2e27] py-9 sm:py-11">
+        <h2 className="text-lg font-semibold text-[#e6f1eb]">{L.glossary}</h2>
+        <p className="mb-6 mt-1.5 max-w-[62ch] text-sm text-[#8fa49b]">{L.glossaryLede}</p>
+        <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {ACRONYMS.map(item=><div key={item.short} className="rounded-xl border border-[#25382f] bg-[#0c1815] px-3.5 py-3">
+            <dt className="text-[13px] font-semibold text-primary">{item.short}</dt>
+            <dd className="mt-1 text-[12.5px] leading-relaxed text-[#9db0a7]">{item.long}</dd>
+          </div>)}
+        </dl>
       </section>
 
       <section id="pipeline" className={ANCHOR+" border-b border-[#1e2e27] py-9 sm:py-11"}>
@@ -313,7 +326,9 @@ export default function Cheatsheet(){
     </div>
 
     <button type="button" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} title={L.top} aria-label={L.top}
-      className={"fixed bottom-5 right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-[#2a3d35] bg-[#10201b]/95 text-[#cfe0d6] shadow-[0_10px_24px_rgba(0,0,0,.4)] backdrop-blur transition hover:border-primary/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:right-6 "+(scrolled?"opacity-100":"pointer-events-none opacity-0")}>
+      aria-hidden={!scrolled} tabIndex={scrolled?0:-1}
+      style={{bottom:"max(1.25rem, env(safe-area-inset-bottom))"}}
+      className={"fixed right-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-[#2a3d35] bg-[#10201b]/95 text-[#cfe0d6] shadow-[0_10px_24px_rgba(0,0,0,.4)] backdrop-blur transition hover:border-primary/50 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:hidden "+(scrolled?"opacity-100":"pointer-events-none opacity-0")}>
       <ArrowUp size={18}/></button>
   </main>;
 }

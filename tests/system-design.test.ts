@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { parseIntent, normalize, kindOf, VOCABULARY } from "../lib/diagram.ts";
 import { useDiagramStore } from "../lib/store.ts";
 import {
-  BUCKETS, MENTAL_MODEL, PAIRS, CHEATSHEET, MEMORISE, WORKED_EXAMPLE, rowToStatement,
+  ACRONYMS, BUCKETS, MENTAL_MODEL, PAIRS, CHEATSHEET, MEMORISE, WORKED_EXAMPLE, rowToStatement,
   PIPELINE, PIPELINE_SHORT, WEB_VITALS, pipelineToStatements,
 } from "../lib/system-design.ts";
 
@@ -20,6 +20,14 @@ const edgesByLabel = () => {
 
 const allTechniques = [...new Set(CHEATSHEET.flatMap(r => r.techniques))];
 const allRequirements = CHEATSHEET.map(r => r.node);
+
+test("the abbreviation glossary has unique, non-empty entries", () => {
+  assert.equal(new Set(ACRONYMS.map(item => item.short)).size, ACRONYMS.length);
+  for (const item of ACRONYMS) {
+    assert.ok(item.short.trim(), "glossary abbreviation is blank");
+    assert.ok(item.long.trim(), `${item.short} has no expansion`);
+  }
+});
 
 // --- the material is drawable -------------------------------------------------
 
